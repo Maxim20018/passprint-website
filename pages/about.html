@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>À Propos - PassPrint | Notre Histoire, Mission & Expertise</title>
+    <meta name="description" content="Découvrez l'histoire de PassPrint, notre mission, nos valeurs et notre équipe d'experts en impression. Plus de 10 ans d'expertise à votre service à Douala.">
+    <meta name="keywords" content="à propos PassPrint, histoire entreprise, mission valeurs, équipe imprimerie Douala, expertise impression">
+    <meta name="author" content="PassPrint">
+    <meta property="og:title" content="À Propos - PassPrint">
+    <meta property="og:description" content="Découvrez notre histoire, mission et équipe d'experts">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" href="../images/logo.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../images/logo.svg">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Animate CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        :root {
+            --about-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        .about-hero {
+            background: var(--about-gradient);
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="60" cy="30" r="1" fill="rgba(255,255,255,0.12)"/></svg>') repeat;
+            animation: float 25s infinite linear;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: var(--gold-gradient);
+        }
+
+        .timeline-item {
+            background: rgba(45, 27, 105, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-badge {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: var(--gold-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            top: -30px;
+            z-index: 2;
+        }
+
+        .value-card {
+            background: rgba(45, 27, 105, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            height: 100%;
+        }
+
+        .value-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .value-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gold-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .value-card:hover .value-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .value-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .team-member {
+            background: rgba(45, 27, 105, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .team-member:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .member-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--gold-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .team-member:hover .member-avatar {
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .member-avatar i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .vision-mission {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 25px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .certification-badge {
+            background: rgba(0, 166, 118, 0.1);
+            border: 1px solid rgba(0, 166, 118, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .certification-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 166, 118, 0.2);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../images/logo.svg" alt="PassPrint Logo" height="70" class="d-inline-block align-top">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link active text-gradient" href="about.html">À propos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="faq.html">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Enhanced Hero Section -->
+    <section class="about-hero text-white">
+        <div class="container position-relative">
+            <div class="row align-items-center min-vh-70">
+                <div class="col-lg-8 mx-auto text-center">
+                    <div class="animate-slide-up">
+                        <span class="badge bg-white text-dark px-3 py-2 mb-4 animate-pulse">
+                            <i class="fas fa-building me-2"></i>Notre Histoire
+                        </span>
+                        <h1 class="display-3 fw-bold mb-4 text-shadow">
+                            Plus de 10 Ans d'<span class="text-gradient">Excellence</span>
+                        </h1>
+                        <p class="lead mb-4" style="font-size: 1.3rem; line-height: 1.6;">
+                            Depuis notre création en 2010, PassPrint s'est engagée à révolutionner l'industrie de l'impression à Douala en offrant des services d'exception et des solutions innovantes à nos clients.
+                        </p>
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="stat-number">500+</div>
+                                <p class="mb-0">Clients satisfaits</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-number">10K+</div>
+                                <p class="mb-0">Projets réalisés</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-number">10+</div>
+                                <p class="mb-0">Années d'expérience</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="py-5" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+        <div class="container">
+
+            <!-- Vision & Mission -->
+            <section class="vision-mission mb-5 animate-slide-up">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="text-center">
+                            <i class="fas fa-eye fa-4x text-warning mb-4 animate-float"></i>
+                            <h2 class="h1 mb-4 text-gradient">Notre Vision</h2>
+                            <p class="lead" style="font-size: 1.2rem;">
+                                Devenir la référence incontestée de l'impression professionnelle à Douala et au Cameroun, en offrant des solutions innovantes qui dépassent les attentes de nos clients.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="text-center">
+                            <i class="fas fa-bullseye fa-4x text-warning mb-4 animate-float" style="animation-delay: 2s;"></i>
+                            <h2 class="h1 mb-4 text-gradient">Notre Mission</h2>
+                            <p class="lead" style="font-size: 1.2rem;">
+                                Offrir des services d'impression exceptionnels, des fournitures de qualité supérieure et un accompagnement personnalisé pour aider nos clients à réussir leurs projets.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Company Timeline -->
+            <section class="mb-5">
+                <div class="text-center mb-5">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Notre Parcours</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto;">
+                        Une décennie d'innovation, de croissance et d'engagement envers l'excellence dans l'industrie de l'impression.
+                    </p>
+                </div>
+
+                <div class="timeline">
+                    <div class="timeline-item animate-slide-up">
+                        <div class="timeline-badge">2010</div>
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h3 class="h2 mb-3">Création de PassPrint</h3>
+                                <p class="mb-3" style="font-size: 1.1rem;">
+                                    Fondation de l'entreprise avec une vision claire : démocratiser l'accès à des services d'impression de haute qualité à Douala.
+                                </p>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <span class="badge bg-warning">Premier atelier ouvert</span>
+                                    <span class="badge bg-warning">5 employés passionnés</span>
+                                    <span class="badge bg-warning">Focus sur la qualité</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-center">
+                                <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
+                                <p class="mb-0">L'innovation au service de la qualité</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item animate-slide-up" style="animation-delay: 0.2s;">
+                        <div class="timeline-badge">2015</div>
+                        <div class="row align-items-center">
+                            <div class="col-lg-8 order-lg-2">
+                                <h3 class="h2 mb-3">Expansion et Modernisation</h3>
+                                <p class="mb-3" style="font-size: 1.1rem;">
+                                    Investissement dans des équipements de pointe et agrandissement de nos locaux pour répondre à la demande croissante.
+                                </p>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <span class="badge bg-success">Équipements modernes</span>
+                                    <span class="badge bg-success">Nouveaux locaux</span>
+                                    <span class="badge bg-success">15 employés qualifiés</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-center order-lg-1">
+                                <i class="fas fa-expand-arrows-alt fa-3x text-success mb-3"></i>
+                                <p class="mb-0">Croissance et développement</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item animate-slide-up" style="animation-delay: 0.4s;">
+                        <div class="timeline-badge">2020</div>
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h3 class="h2 mb-3">Innovation Technologique</h3>
+                                <p class="mb-3" style="font-size: 1.1rem;">
+                                    Adoption des dernières technologies d'impression UV et développement de notre plateforme web-to-print pour une meilleure expérience client.
+                                </p>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <span class="badge bg-primary">Technologie UV</span>
+                                    <span class="badge bg-primary">Plateforme digitale</span>
+                                    <span class="badge bg-primary">Service 24/7</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-center">
+                                <i class="fas fa-microchip fa-3x text-primary mb-3"></i>
+                                <p class="mb-0">Innovation technologique</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item animate-slide-up" style="animation-delay: 0.6s;">
+                        <div class="timeline-badge">2024</div>
+                        <div class="row align-items-center">
+                            <div class="col-lg-8 order-lg-2">
+                                <h3 class="h2 mb-3">Excellence Reconnue</h3>
+                                <p class="mb-3" style="font-size: 1.1rem;">
+                                    Plus de 500 clients satisfaits, une équipe de 20 professionnels passionnés et une réputation solidement établie comme référence de l'impression à Douala.
+                                </p>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <span class="badge bg-warning">500+ clients</span>
+                                    <span class="badge bg-warning">20 experts</span>
+                                    <span class="badge bg-warning">Référence du secteur</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-center order-lg-1">
+                                <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
+                                <p class="mb-0">Leadership reconnu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Company Values -->
+            <section class="mb-5">
+                <div class="text-center mb-5">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Nos Valeurs Fondamentales</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto;">
+                        Les principes qui guident chacune de nos actions et définissent notre engagement envers l'excellence.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="value-card animate-slide-up">
+                            <div class="value-icon">
+                                <i class="fas fa-gem"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Excellence</h3>
+                            <p class="mb-0">Nous visons la perfection dans chaque projet, de la conception à la livraison finale.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="value-card animate-slide-up" style="animation-delay: 0.2s;">
+                            <div class="value-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Innovation</h3>
+                            <p class="mb-0">Nous adoptons les dernières technologies pour offrir des solutions toujours plus performantes.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="value-card animate-slide-up" style="animation-delay: 0.4s;">
+                            <div class="value-icon">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Service Client</h3>
+                            <p class="mb-0">Chaque client est unique et mérite une attention personnalisée et un accompagnement dédié.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="value-card animate-slide-up" style="animation-delay: 0.6s;">
+                            <div class="value-icon">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Durabilité</h3>
+                            <p class="mb-0">Nous nous engageons pour l'environnement en favorisant les pratiques et matériaux écologiques.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Team Section -->
+            <section class="mb-5">
+                <div class="text-center mb-5">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Notre Équipe d'Experts</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto;">
+                        Rencontrez les professionnels passionnés qui donnent vie à vos projets d'impression avec expertise et créativité.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="team-member animate-slide-up">
+                            <div class="member-avatar">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h3 class="h2 mb-2">Équipe de Direction</h3>
+                            <p class="text-warning mb-2">Direction & Stratégie</p>
+                            <p class="mb-3">Nos dirigeants apportent plus de 15 ans d'expérience dans l'industrie de l'impression et guident l'entreprise vers l'excellence.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <span class="badge bg-warning">Leadership</span>
+                                <span class="badge bg-warning">Vision</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="team-member animate-slide-up" style="animation-delay: 0.2s;">
+                            <div class="member-avatar">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <h3 class="h2 mb-2">Équipe Créative</h3>
+                            <p class="text-warning mb-2">Design & Pré-presse</p>
+                            <p class="mb-3">Nos designers et techniciens pré-presse transforment vos idées en fichiers d'impression optimisés pour des résultats exceptionnels.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <span class="badge bg-success">Créativité</span>
+                                <span class="badge bg-success">Précision</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="team-member animate-slide-up" style="animation-delay: 0.4s;">
+                            <div class="member-avatar">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <h3 class="h2 mb-2">Équipe Technique</h3>
+                            <p class="text-warning mb-2">Production & Qualité</p>
+                            <p class="mb-3">Nos techniciens qualifiés opèrent nos équipements de pointe et garantissent une qualité irréprochable à chaque étape.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <span class="badge bg-primary">Expertise</span>
+                                <span class="badge bg-primary">Qualité</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section class="mb-5">
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card animate-slide-up">
+                            <div class="stat-number">500+</div>
+                            <h5 class="text-warning mb-2">Clients Satisfaits</h5>
+                            <p class="mb-0">Entreprises et particuliers nous font confiance depuis 10 ans</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card animate-slide-up" style="animation-delay: 0.2s;">
+                            <div class="stat-number">10K+</div>
+                            <h5 class="text-warning mb-2">Projets Réalisés</h5>
+                            <p class="mb-0">De la carte de visite au panneau publicitaire grand format</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card animate-slide-up" style="animation-delay: 0.4s;">
+                            <div class="stat-number">20</div>
+                            <h5 class="text-warning mb-2">Experts Qualifiés</h5>
+                            <p class="mb-0">Professionnels passionnés par leur métier</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card animate-slide-up" style="animation-delay: 0.6s;">
+                            <div class="stat-number">2h</div>
+                            <h5 class="text-warning mb-2">Devis Rapide</h5>
+                            <p class="mb-0">Réponse garantie sous 2 heures ouvrées</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Certifications & Awards -->
+            <section class="mb-5">
+                <div class="text-center mb-5">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Certifications & Reconnaissances</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto;">
+                        Notre engagement envers la qualité est reconnu par nos pairs et nos clients.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="certification-badge animate-slide-up">
+                            <i class="fas fa-certificate fa-3x text-success mb-3"></i>
+                            <h5 class="text-success mb-2">ISO 9001</h5>
+                            <p class="mb-0">Management de la qualité certifié pour garantir l'excellence de nos processus</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="certification-badge animate-slide-up" style="animation-delay: 0.2s;">
+                            <i class="fas fa-leaf fa-3x text-success mb-3"></i>
+                            <h5 class="text-success mb-2">Engagement Écologique</h5>
+                            <p class="mb-0">Utilisation de matériaux recyclés et pratiques respectueuses de l'environnement</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="certification-badge animate-slide-up" style="animation-delay: 0.4s;">
+                            <i class="fas fa-award fa-3x text-warning mb-3"></i>
+                            <h5 class="text-warning mb-2">Prix de l'Innovation</h5>
+                            <p class="mb-0">Reconnus pour notre adoption précoce des technologies d'impression modernes</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Enhanced Footer -->
+    <footer class="py-5" style="background: linear-gradient(135deg, #2D1B69 0%, #0D1B2A 100%);">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 mb-4">
+                    <img src="../images/logo.svg" alt="PassPrint Logo" height="80" class="mb-4">
+                    <p class="mb-4" style="font-size: 1.1rem;">
+                        Depuis 2010, PassPrint incarne l'excellence dans l'impression professionnelle à Douala. Notre passion pour la qualité et l'innovation nous pousse à nous dépasser pour satisfaire nos clients.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="https://wa.me/237696465609" class="btn btn-success btn-lg" target="_blank">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="tel:+237696465609" class="btn btn-warning btn-lg">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <a href="mailto:passprint@yahoo.com" class="btn btn-info btn-lg">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Entreprise</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="about.html" class="text-white text-decoration-none">À propos</a></li>
+                        <li class="mb-2"><a href="blog.html" class="text-white text-decoration-none">Blog</a></li>
+                        <li class="mb-2"><a href="contact.html" class="text-white text-decoration-none">Contact</a></li>
+                        <li class="mb-2"><a href="faq.html" class="text-white text-decoration-none">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Services</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Impression</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Signalétique</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Fournitures</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Personnalisation</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-warning mb-3">Pourquoi Nous Choisir ?</h5>
+                    <div class="mb-3">
+                        <p class="mb-2"><i class="fas fa-clock me-2 text-warning"></i>Devis sous 2 heures</p>
+                        <p class="mb-2"><i class="fas fa-award me-2 text-warning"></i>10+ ans d'expérience</p>
+                        <p class="mb-2"><i class="fas fa-users me-2 text-warning"></i>500+ clients satisfaits</p>
+                        <p class="mb-0"><i class="fas fa-map-marker-alt me-2 text-warning"></i>Douala, Cameroun</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-warning">Expertise Reconnue</span>
+                        <span class="badge bg-warning">Service Personnalisé</span>
+                        <span class="badge bg-warning">Qualité Garantie</span>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255, 107, 53, 0.3);">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 PassPrint. Tous droits réservés.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text-warning">
+                        <i class="fas fa-heart me-2"></i>
+                        Entreprise fondée avec passion en 2010 à Douala, Cameroun
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="btn btn-warning back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Enhanced About Page Interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate statistics on scroll
+            function animateStats() {
+                const stats = document.querySelectorAll('.stat-number');
+                stats.forEach(stat => {
+                    const target = parseInt(stat.textContent.replace('+', ''));
+                    let current = 0;
+                    const increment = target / 50;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            stat.textContent = target + '+';
+                            clearInterval(timer);
+                        } else {
+                            stat.textContent = Math.floor(current) + '+';
+                        }
+                    }, 50);
+                });
+            }
+
+            // Trigger stats animation when in view
+            const statsSection = document.querySelector('.row.g-4');
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateStats();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+            observer.observe(statsSection);
+
+            // Timeline animations
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            timelineItems.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.3}s`;
+            });
+
+            // Back to top functionality
+            const backToTop = document.getElementById('backToTop');
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTop.style.display = 'flex';
+                } else {
+                    backToTop.style.display = 'none';
+                }
+            });
+
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Animate elements on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const elementObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-slide-up');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.value-card, .team-member, .certification-badge, .vision-mission').forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // Navbar scroll effect
+            window.addEventListener('scroll', function() {
+                const navbar = document.querySelector('.navbar');
+                if (window.pageYOffset > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+
+            // Add stagger animation to cards
+            const cards = document.querySelectorAll('.value-card, .team-member');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.2}s`;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+🚀 GUIDE SIMPLE - PASSPRINT
+
+1. Le serveur est actif sur le port 5000
+2. Ouvrez votre navigateur
+3. Tapez: http://localhost:5000
+4. Vous verrez le site PassPrint
+
+URLs de test:
+- Site principal: http://localhost:5000
+- API: http://localhost:5000/api/health
+
+Le serveur fonctionne - testez maintenant!

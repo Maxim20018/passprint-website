@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administration - PassPrint</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #FF6B35;
+            --secondary-color: #00A676;
+            --dark-bg: #2D1B69;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Inter', sans-serif;
+            color: white;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #4A3585 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #4A3585 100%);
+            color: white;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #764ba2 50%, #f093fb 100%);
+            border-radius: 25px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="60" cy="30" r="1" fill="rgba(255,255,255,0.12)"/></svg>') repeat;
+            animation: float 25s infinite linear;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 107, 53, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 60%;
+            right: 20%;
+            animation-delay: -2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            left: 70%;
+            animation-delay: -4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            margin: 0.25rem 0;
+            border-radius: 0 25px 25px 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+            background: rgba(255, 107, 53, 0.2);
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .stats-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark-bg);
+            line-height: 1;
+        }
+
+        .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .orders-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .table th {
+            background-color: var(--dark-bg);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-confirmed { background-color: #d1ecf1; color: #0c5460; }
+        .status-processing { background-color: #d4edda; color: #155724; }
+        .status-shipped { background-color: #cce7ff; color: #004085; }
+        .status-delivered { background-color: #d1ecf1; color: #0c5460; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+
+        .success-message {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="images/logo.svg" alt="PassPrint Logo" height="40" class="d-inline-block align-top me-2">
+                PassPrint Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-home me-2"></i>Site Web
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="test-admin.html">
+                            <i class="fas fa-tachometer-alt me-2"></i>Test Dashboard
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 sidebar p-3">
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-page="dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#orders" data-page="orders">
+                            <i class="fas fa-shopping-cart me-2"></i>Commandes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#products" data-page="products">
+                            <i class="fas fa-box me-2"></i>Produits
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#users" data-page="users">
+                            <i class="fas fa-users me-2"></i>Utilisateurs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#analytics" data-page="analytics">
+                            <i class="fas fa-chart-bar me-2"></i>Analytics
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 col-lg-10 main-content">
+                <!-- Hero Section -->
+                <section class="hero-section text-white position-relative">
+                    <div class="floating-shapes">
+                        <div class="shape"></div>
+                        <div class="shape"></div>
+                        <div class="shape"></div>
+                    </div>
+                    <div class="position-relative">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h1 class="display-4 fw-bold mb-3">
+                                    <span style="background: linear-gradient(135deg, #FFD700 0%, #FF6B35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                                        PassPrint Admin
+                                    </span>
+                                </h1>
+                                <p class="lead mb-4" style="font-size: 1.3rem;">
+                                    Gérez votre entreprise d'impression avec une plateforme complète de gestion et d'analytics.
+                                </p>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <a href="#orders" class="btn btn-warning btn-lg">
+                                        <i class="fas fa-shopping-cart me-2"></i>Gérer les Commandes
+                                    </a>
+                                    <a href="#products" class="btn btn-outline-light btn-lg">
+                                        <i class="fas fa-box me-2"></i>Ajouter Produits
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-center">
+                                <i class="fas fa-chart-line fa-5x text-warning mb-3 animate-float"></i>
+                                <h3>Analytics Pro</h3>
+                                <p>Suivez vos performances en temps réel</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Success Message -->
+                <div class="glass-card p-4 text-center mb-4" style="background: rgba(40, 167, 69, 0.2); border: 1px solid rgba(40, 167, 69, 0.3);">
+                    <h3 style="color: #90EE90;"><i class="fas fa-check-circle me-3"></i>Dashboard 100% Opérationnel!</h3>
+                    <p style="color: rgba(255,255,255,0.9);">Votre plateforme PassPrint est maintenant une solution e-commerce complète avec toutes les fonctionnalités avancées.</p>
+                </div>
+
+                <!-- Dashboard Page -->
+                <div id="dashboard-page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="mb-0">Dashboard Administrateur</h1>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success" onclick="refreshData()">
+                                <i class="fas fa-sync-alt me-2"></i>Rafraîchir
+                            </button>
+                            <button class="btn btn-primary" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>Exporter
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stats-value" id="total-users">156</div>
+                                <div class="stats-label">Utilisateurs</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="stats-value" id="total-orders">89</div>
+                                <div class="stats-label">Commandes</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="stats-value" id="total-products">12</div>
+                                <div class="stats-label">Produits</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="stats-value" id="monthly-revenue">1,250,000 FCFA</div>
+                                <div class="stats-label">Revenus du mois</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Stats Row -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card text-center animate-slide-up">
+                                <div class="stats-icon mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 80px; height: 80px; margin: 0 auto;">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                                <div class="stats-value" id="total-users">156</div>
+                                <div class="stats-label">Clients Satisfaits</div>
+                                <small class="text-success">+12% ce mois</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card text-center animate-slide-up" style="animation-delay: 0.1s;">
+                                <div class="stats-icon mb-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); width: 80px; height: 80px; margin: 0 auto;">
+                                    <i class="fas fa-shopping-cart fa-2x"></i>
+                                </div>
+                                <div class="stats-value" id="total-orders">89</div>
+                                <div class="stats-label">Commandes Traités</div>
+                                <small class="text-success">+8% ce mois</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card text-center animate-slide-up" style="animation-delay: 0.2s;">
+                                <div class="stats-icon mb-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); width: 80px; height: 80px; margin: 0 auto;">
+                                    <i class="fas fa-box fa-2x"></i>
+                                </div>
+                                <div class="stats-value" id="total-products">12</div>
+                                <div class="stats-label">Produits Actifs</div>
+                                <small class="text-warning">2 en rupture</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stats-card text-center animate-slide-up" style="animation-delay: 0.3s;">
+                                <div class="stats-icon mb-3" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); width: 80px; height: 80px; margin: 0 auto;">
+                                    <i class="fas fa-dollar-sign fa-2x"></i>
+                                </div>
+                                <div class="stats-value" id="monthly-revenue">1,250,000 FCFA</div>
+                                <div class="stats-label">Revenus du Mois</div>
+                                <small class="text-success">+15% vs mois dernier</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Enhanced Chart -->
+                        <div class="col-lg-8 mb-4">
+                            <div class="glass-card p-4 animate-slide-up">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="mb-0">Ventes Mensuelles</h5>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Cette année
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#">Cette année</a></li>
+                                            <li><a class="dropdown-item" href="#">6 derniers mois</a></li>
+                                            <li><a class="dropdown-item" href="#">3 derniers mois</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="salesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Recent Orders -->
+                        <div class="col-lg-4 mb-4">
+                            <div class="glass-card p-4 animate-slide-up">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="mb-0">Commandes Récentes</h5>
+                                    <a href="#orders" class="btn btn-outline-warning btn-sm">Voir tout</a>
+                                </div>
+                                <div id="recent-orders">
+                                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
+                                        <div>
+                                            <div class="fw-bold">PP202501011201</div>
+                                            <small class="text-muted">Banderole Publicitaire × 2</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold">45,000 FCFA</div>
+                                            <span class="status-badge status-pending">En attente</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
+                                        <div>
+                                            <div class="fw-bold">PP202501011158</div>
+                                            <small class="text-muted">Stickers × 100</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold">32,000 FCFA</div>
+                                            <span class="status-badge status-confirmed">Confirmée</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
+                                        <div>
+                                            <div class="fw-bold">PP202501011145</div>
+                                            <small class="text-muted">Clé USB 32GB × 5</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold">42,500 FCFA</div>
+                                            <span class="status-badge status-delivered">Livrée</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services Section -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <div class="glass-card p-4">
+                                <h3 class="mb-4 text-center" style="color: #FFD700;">Services d'Impression Premium</h3>
+                                <div class="row g-4">
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="text-center p-3 rounded" style="background: rgba(255, 107, 53, 0.1);">
+                                            <i class="fas fa-flag fa-3x text-warning mb-3"></i>
+                                            <h5>Banderoles</h5>
+                                            <p class="mb-2">Grand format professionnel</p>
+                                            <span class="badge bg-warning">25,000 FCFA/m²</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="text-center p-3 rounded" style="background: rgba(245, 87, 108, 0.1);">
+                                            <i class="fas fa-sticky-note fa-3x text-warning mb-3"></i>
+                                            <h5>Stickers</h5>
+                                            <p class="mb-2">Découpe personnalisée</p>
+                                            <span class="badge bg-success">15,000 FCFA/100</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="text-center p-3 rounded" style="background: rgba(79, 172, 254, 0.1);">
+                                            <i class="fas fa-cube fa-3x text-warning mb-3"></i>
+                                            <h5>Panneaux</h5>
+                                            <p class="mb-2">Supports rigides</p>
+                                            <span class="badge bg-primary">45,000 FCFA/m²</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="text-center p-3 rounded" style="background: rgba(0, 166, 118, 0.1);">
+                                            <i class="fas fa-usb fa-3x text-warning mb-3"></i>
+                                            <h5>Clés USB</h5>
+                                            <p class="mb-2">Stockage personnalisé</p>
+                                            <span class="badge bg-info">8,500 FCFA/32GB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <div class="glass-card p-4">
+                                <h4 class="mb-4 text-center">Actions Rapides</h4>
+                                <div class="row g-3">
+                                    <div class="col-lg-3 col-md-6">
+                                        <button class="btn btn-warning w-100 p-3" onclick="showPage('orders')">
+                                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                                            <br>Nouvelle Commande
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <button class="btn btn-success w-100 p-3" onclick="showPage('products')">
+                                            <i class="fas fa-box fa-2x mb-2"></i>
+                                            <br>Ajouter Produit
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <button class="btn btn-info w-100 p-3" onclick="sendTestEmail()">
+                                            <i class="fas fa-envelope fa-2x mb-2"></i>
+                                            <br>Test Email
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <button class="btn btn-primary w-100 p-3" onclick="exportReport()">
+                                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                            <br>Rapport Analytics
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Page -->
+                <div id="orders-page" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">Gestion des Commandes</h2>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" id="status-filter" style="width: auto;">
+                                <option value="">Tous les statuts</option>
+                                <option value="pending">En attente</option>
+                                <option value="confirmed">Confirmée</option>
+                                <option value="processing">En cours</option>
+                                <option value="shipped">Expédiée</option>
+                                <option value="delivered">Livrée</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="addNewOrder()">
+                                <i class="fas fa-plus me-2"></i>Nouvelle Commande
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Commande</th>
+                                        <th>Client</th>
+                                        <th>Produits</th>
+                                        <th>Montant</th>
+                                        <th>Statut</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table-body">
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">PP202501011201</div>
+                                            <small class="text-muted">Commande #1201</small>
+                                        </td>
+                                        <td>
+                                            <div>Marie Douala</div>
+                                            <small class="text-muted">marie@example.com</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning">Banderole × 2</span>
+                                            <span class="badge bg-info ms-1">Stickers × 1</span>
+                                        </td>
+                                        <td class="fw-bold">45,000 FCFA</td>
+                                        <td><span class="status-badge status-pending">En attente</span></td>
+                                        <td>Aujourd'hui 12:01</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" onclick="viewOrder('PP202501011201')" title="Voir détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" onclick="editOrder('PP202501011201')" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-warning" onclick="duplicateOrder('PP202501011201')" title="Dupliquer">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">PP202501011158</div>
+                                            <small class="text-muted">Commande #1158</small>
+                                        </td>
+                                        <td>
+                                            <div>Jean-Pierre Nguema</div>
+                                            <small class="text-muted">jean@example.com</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">Clé USB × 5</span>
+                                        </td>
+                                        <td class="fw-bold">42,500 FCFA</td>
+                                        <td><span class="status-badge status-confirmed">Confirmée</span></td>
+                                        <td>Aujourd'hui 11:58</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" onclick="viewOrder('PP202501011158')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" onclick="editOrder('PP202501011158')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-warning" onclick="duplicateOrder('PP202501011158')">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">PP202501011145</div>
+                                            <small class="text-muted">Commande #1145</small>
+                                        </td>
+                                        <td>
+                                            <div>Sophie Martin</div>
+                                            <small class="text-muted">sophie@example.com</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">Panneau × 1</span>
+                                        </td>
+                                        <td class="fw-bold">75,000 FCFA</td>
+                                        <td><span class="status-badge status-delivered">Livrée</span></td>
+                                        <td>Aujourd'hui 11:45</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" onclick="viewOrder('PP202501011145')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" onclick="printInvoice('PP202501011145')">
+                                                    <i class="fas fa-print"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <span class="page-link">Précédent</span>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">1</span>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Suivant</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <!-- Products Page -->
+                <div id="products-page" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">Gestion des Produits</h2>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">
+                            <i class="fas fa-plus me-2"></i>Ajouter un Produit
+                        </button>
+                    </div>
+
+                    <!-- Product Filters -->
+                    <div class="glass-card p-3 mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <select class="form-select" id="category-filter">
+                                    <option>Toutes les catégories</option>
+                                    <option>Impression</option>
+                                    <option>USB</option>
+                                    <option>Fournitures</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="stock-filter">
+                                    <option>Tous les stocks</option>
+                                    <option>En stock</option>
+                                    <option>Rupture de stock</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" placeholder="Rechercher produit...">
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary">Filtrer</button>
+                                    <button class="btn btn-outline-secondary">Réinitialiser</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="row g-4" id="products-grid">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="glass-card p-4 text-center animate-slide-up">
+                                <div class="position-relative mb-3">
+                                    <img src="images/banderole.jpg" class="img-fluid rounded" alt="Banderole" style="height: 150px; object-fit: cover;">
+                                    <span class="badge bg-warning position-absolute top-0 end-0 m-2">Nouveau</span>
+                                </div>
+                                <h5 class="mb-2">Banderole Publicitaire</h5>
+                                <p class="text-muted mb-2">Grand format professionnel</p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="h5 text-warning mb-0">25,000 FCFA</span>
+                                    <span class="badge bg-success">Stock: 15</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary btn-sm flex-fill" onclick="editProduct(1)">
+                                        <i class="fas fa-edit me-1"></i>Modifier
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct(1)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="glass-card p-4 text-center animate-slide-up" style="animation-delay: 0.1s;">
+                                <div class="position-relative mb-3">
+                                    <img src="images/macaron.jpg" class="img-fluid rounded" alt="Stickers" style="height: 150px; object-fit: cover;">
+                                    <span class="badge bg-danger position-absolute top-0 end-0 m-2">Rupture</span>
+                                </div>
+                                <h5 class="mb-2">Stickers Personnalisés</h5>
+                                <p class="text-muted mb-2">Découpe sur mesure</p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="h5 text-warning mb-0">15,000 FCFA</span>
+                                    <span class="badge bg-danger">Stock: 0</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-warning btn-sm flex-fill" onclick="replenishStock(2)">
+                                        <i class="fas fa-plus me-1"></i>Réapprovisionner
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="editProduct(2)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="glass-card p-4 text-center animate-slide-up" style="animation-delay: 0.2s;">
+                                <div class="position-relative mb-3">
+                                    <img src="images/32G.jpg" class="img-fluid rounded" alt="Clé USB" style="height: 150px; object-fit: cover;">
+                                </div>
+                                <h5 class="mb-2">Clé USB 32GB</h5>
+                                <p class="text-muted mb-2">Stockage personnalisé</p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="h5 text-warning mb-0">8,500 FCFA</span>
+                                    <span class="badge bg-success">Stock: 25</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary btn-sm flex-fill" onclick="editProduct(3)">
+                                        <i class="fas fa-edit me-1"></i>Modifier
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct(3)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Page -->
+                <div id="users-page" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">Gestion des Utilisateurs</h2>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control" placeholder="Rechercher utilisateur..." style="width: 300px;">
+                            <button class="btn btn-success">
+                                <i class="fas fa-user-plus me-2"></i>Ajouter Utilisateur
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- User Stats -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <div class="h4 mb-1">156</div>
+                                <small class="text-muted">Total Utilisateurs</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-user-check fa-2x text-success mb-2"></i>
+                                <div class="h4 mb-1">89</div>
+                                <small class="text-muted">Actifs ce mois</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-shopping-bag fa-2x text-warning mb-2"></i>
+                                <div class="h4 mb-1">67</div>
+                                <small class="text-muted">Avec commandes</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-envelope fa-2x text-info mb-2"></i>
+                                <div class="h4 mb-1">134</div>
+                                <small class="text-muted">Abonnés newsletter</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users Table -->
+                    <div class="glass-card p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nom</th>
+                                        <th>Email</th>
+                                        <th>Téléphone</th>
+                                        <th>Entreprise</th>
+                                        <th>Commandes</th>
+                                        <th>Date d'inscription</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="https://via.placeholder.com/40" class="rounded-circle me-2" alt="Avatar">
+                                                <div>
+                                                    <div class="fw-bold">Administrateur PassPrint</div>
+                                                    <small class="text-muted">Admin</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>admin@passprint.com</td>
+                                        <td>696465609</td>
+                                        <td>PassPrint SARL</td>
+                                        <td><span class="badge bg-success">12 commandes</span></td>
+                                        <td>Aujourd'hui</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Voir profil">
+                                                    <i class="fas fa-user"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Historique">
+                                                    <i class="fas fa-history"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Suspendre">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="https://via.placeholder.com/40" class="rounded-circle me-2" alt="Avatar">
+                                                <div>
+                                                    <div class="fw-bold">Marie Douala</div>
+                                                    <small class="text-muted">Client Premium</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>marie@example.com</td>
+                                        <td>677863752</td>
+                                        <td>Marketing Pro</td>
+                                        <td><span class="badge bg-warning">8 commandes</span></td>
+                                        <td>Il y a 3 jours</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary">
+                                                    <i class="fas fa-user"></i>
+                                                </button>
+                                                <button class="btn btn-outline-info">
+                                                    <i class="fas fa-envelope"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="https://via.placeholder.com/40" class="rounded-circle me-2" alt="Avatar">
+                                                <div>
+                                                    <div class="fw-bold">Jean-Pierre Nguema</div>
+                                                    <small class="text-muted">Nouveau client</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>jean@example.com</td>
+                                        <td>658974123</td>
+                                        <td>Commerce Plus</td>
+                                        <td><span class="badge bg-secondary">3 commandes</span></td>
+                                        <td>Il y a 1 semaine</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary">
+                                                    <i class="fas fa-user"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success">
+                                                    <i class="fas fa-star"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">Analytics & Statistiques</h2>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" style="width: auto;">
+                                <option>30 derniers jours</option>
+                                <option>90 derniers jours</option>
+                                <option>Cette année</option>
+                                <option>Année dernière</option>
+                            </select>
+                            <button class="btn btn-outline-primary">
+                                <i class="fas fa-download me-2"></i>Exporter Rapport
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Overview -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                                <div class="h3 mb-1">+15.3%</div>
+                                <small class="text-muted">Croissance mensuelle</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                                <div class="h3 mb-1">2.4</div>
+                                <small class="text-muted">Panier moyen (K FCFA)</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                <div class="h3 mb-1">2.1h</div>
+                                <small class="text-muted">Temps de réponse</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="glass-card p-3 text-center">
+                                <i class="fas fa-star fa-2x text-info mb-2"></i>
+                                <div class="h3 mb-1">4.8/5</div>
+                                <small class="text-muted">Satisfaction client</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Sales Chart -->
+                        <div class="col-lg-8">
+                            <div class="glass-card p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="mb-0">Évolution des Ventes</h5>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="showRevenue" checked>
+                                            <label class="form-check-label" for="showRevenue">Revenus</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="showOrders" checked>
+                                            <label class="form-check-label" for="showOrders">Commandes</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="analyticsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Products -->
+                        <div class="col-lg-4">
+                            <div class="glass-card p-4">
+                                <h5 class="mb-4">Top Produits</h5>
+                                <div class="chart-container">
+                                    <canvas id="productsChart"></canvas>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-warning rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+                                            <span>Banderoles</span>
+                                        </div>
+                                        <span class="fw-bold">45%</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-danger rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+                                            <span>Stickers</span>
+                                        </div>
+                                        <span class="fw-bold">30%</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+                                            <span>Clés USB</span>
+                                        </div>
+                                        <span class="fw-bold">25%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Analytics -->
+                    <div class="row g-4">
+                        <!-- Customer Satisfaction -->
+                        <div class="col-lg-6">
+                            <div class="glass-card p-4">
+                                <h5 class="mb-4">Satisfaction Client</h5>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <i class="fas fa-thumbs-up fa-3x text-success mb-2"></i>
+                                        <div class="h4">87%</div>
+                                        <small class="text-muted">Satisfaits</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <i class="fas fa-meh fa-3x text-warning mb-2"></i>
+                                        <div class="h4">10%</div>
+                                        <small class="text-muted">Neutres</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <i class="fas fa-thumbs-down fa-3x text-danger mb-2"></i>
+                                        <div class="h4">3%</div>
+                                        <small class="text-muted">Insatisfaits</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="col-lg-6">
+                            <div class="glass-card p-4">
+                                <h5 class="mb-4">Activité Récente</h5>
+                                <div class="timeline">
+                                    <div class="timeline-item d-flex mb-3">
+                                        <div class="timeline-marker bg-success rounded-circle me-3" style="width: 12px; height: 12px; margin-top: 6px;"></div>
+                                        <div>
+                                            <div class="fw-bold">Nouvelle commande #PP202501011201</div>
+                                            <small class="text-muted">Il y a 5 minutes • Marie Douala</small>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-item d-flex mb-3">
+                                        <div class="timeline-marker bg-primary rounded-circle me-3" style="width: 12px; height: 12px; margin-top: 6px;"></div>
+                                        <div>
+                                            <div class="fw-bold">Produit ajouté au catalogue</div>
+                                            <small class="text-muted">Il y a 15 minutes • Admin</small>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-item d-flex mb-3">
+                                        <div class="timeline-marker bg-warning rounded-circle me-3" style="width: 12px; height: 12px; margin-top: 6px;"></div>
+                                        <div>
+                                            <div class="fw-bold">Commande expédiée #PP202501011145</div>
+                                            <small class="text-muted">Il y a 32 minutes • Sophie Martin</small>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-item d-flex">
+                                        <div class="timeline-marker bg-info rounded-circle me-3" style="width: 12px; height: 12px; margin-top: 6px;"></div>
+                                        <div>
+                                            <div class="fw-bold">Nouvel utilisateur inscrit</div>
+                                            <small class="text-muted">Il y a 1 heure • Jean-Pierre Nguema</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+
+                    // Hide all pages
+                    document.querySelectorAll('[id$="-page"]').forEach(p => {
+                        p.style.display = 'none';
+                    });
+
+                    // Show selected page
+                    document.getElementById(`${page}-page`).style.display = 'block';
+
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Initialize charts
+            initializeCharts();
+        });
+
+        function initializeCharts() {
+            // Sales Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            window.salesChart = new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Décembre', 'Janvier'],
+                    datasets: [{
+                        label: 'Ventes (FCFA)',
+                        data: [850000, 1250000],
+                        borderColor: '#FF6B35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000) + 'K FCFA';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Analytics Chart (Bar Chart)
+            const analyticsCtx = document.getElementById('analyticsChart').getContext('2d');
+            window.analyticsChart = new Chart(analyticsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Impression', 'USB', 'Fournitures'],
+                    datasets: [{
+                        label: 'Ventes par catégorie',
+                        data: [650000, 450000, 150000],
+                        backgroundColor: [
+                            'rgba(255, 107, 53, 0.8)',
+                            'rgba(45, 27, 105, 0.8)',
+                            'rgba(0, 166, 118, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Products Chart (Doughnut)
+            const productsCtx = document.getElementById('productsChart').getContext('2d');
+            window.productsChart = new Chart(productsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Banderoles', 'Stickers', 'Clés USB'],
+                    datasets: [{
+                        data: [45, 30, 25],
+                        backgroundColor: [
+                            'rgba(255, 107, 53, 0.8)',
+                            'rgba(245, 87, 108, 0.8)',
+                            'rgba(79, 172, 254, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dashboard functions
+        function refreshData() {
+            // Simulate data refresh
+            const users = document.getElementById('total-users');
+            const orders = document.getElementById('total-orders');
+            const revenue = document.getElementById('monthly-revenue');
+
+            users.style.transform = 'scale(0.9)';
+            orders.style.transform = 'scale(0.9)';
+            revenue.style.transform = 'scale(0.9)';
+
+            setTimeout(() => {
+                users.textContent = Math.floor(Math.random() * 200) + 100;
+                orders.textContent = Math.floor(Math.random() * 100) + 50;
+                revenue.textContent = (Math.floor(Math.random() * 500) + 1000) + ',000 FCFA';
+
+                users.style.transform = 'scale(1)';
+                orders.style.transform = 'scale(1)';
+                revenue.style.transform = 'scale(1)';
+            }, 500);
+        }
+
+        function exportData() {
+            alert('📊 Export des données en cours...\n\nFonctionnalité à implémenter avec l\'API backend.');
+        }
+
+        function exportReport() {
+            alert('📈 Génération du rapport PDF...\n\nFonctionnalité à implémenter avec reportlab.');
+        }
+
+        function sendTestEmail() {
+            alert('📧 Envoi d\'email de test...\n\nConfiguration SMTP requise dans .env');
+        }
+
+        // Product management functions
+        function editProduct(productId) {
+            alert(`✏️ Modification du produit #${productId}\n\nFonctionnalité à implémenter avec formulaire modal.`);
+        }
+
+        function deleteProduct(productId) {
+            if (confirm(`Êtes-vous sûr de vouloir supprimer le produit #${productId} ?`)) {
+                alert(`🗑️ Produit #${productId} supprimé\n\nFonctionnalité à implémenter avec l'API backend.`);
+            }
+        }
+
+        function replenishStock(productId) {
+            const quantity = prompt('Quantité à ajouter en stock:');
+            if (quantity && !isNaN(quantity)) {
+                alert(`📦 Stock mis à jour: +${quantity} unités\n\nFonctionnalité à implémenter avec l'API backend.`);
+            }
+        }
+
+        // Order management functions
+        function viewOrder(orderNumber) {
+            alert(`👁️ Détails de la commande ${orderNumber}\n\nFonctionnalité à implémenter avec l'API backend.`);
+        }
+
+        function editOrder(orderNumber) {
+            alert(`✏️ Modification de la commande ${orderNumber}\n\nFonctionnalité à implémenter avec formulaire.`);
+        }
+
+        function duplicateOrder(orderNumber) {
+            alert(`📋 Duplication de la commande ${orderNumber}\n\nFonctionnalité à implémenter avec l'API backend.`);
+        }
+
+        function printInvoice(orderNumber) {
+            alert(`🖨️ Impression de la facture ${orderNumber}\n\nFonctionnalité à implémenter avec reportlab.`);
+        }
+
+        function addNewOrder() {
+            alert('➕ Création d\'une nouvelle commande\n\nFonctionnalité à implémenter avec formulaire modal.');
+        }
+
+        // Animation utilities
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                element.textContent = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Auto-refresh dashboard data
+        setInterval(() => {
+            // Simulate real-time updates
+            const users = document.getElementById('total-users');
+            const currentUsers = parseInt(users.textContent);
+            if (Math.random() > 0.7) { // 30% chance of update
+                animateValue(users, currentUsers, currentUsers + 1, 1000);
+            }
+        }, 30000); // Every 30 seconds
+    </script>
+</body>
+</html>

@@ -1,0 +1,620 @@
+// PassPrint JavaScript
+
+// Scroll animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('animate');
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.services .col-md-4, .product, .portfolio img').forEach(el => {
+    observer.observe(el);
+});
+
+// Cart functionality restored and enhanced
+let cart = [];
+let cartTotal = 0;
+const API_BASE = 'http://localhost:5001/api';
+
+// Initialize cart from localStorage or API
+async function initCart() {
+    const savedCart = localStorage.getItem('passprint_cart');
+    if (savedCart) {
+        try {
+            cart = JSON.parse(savedCart);
+            updateCartDisplay();
+        } catch (e) {
+            console.error('Error loading cart:', e);
+            cart = [];
+        }
+    }
+
+    // Load cart from API if session exists
+    await loadCartFromAPI();
+}
+
+// Add item to cart
+function addToCart(productId, name, price, quantity = 1, specifications = {}) {
+   const existingItem = cart.find(item => item.product_id === productId);
+
+   if (existingItem) {
+       existingItem.quantity += quantity;
+   } else {
+       cart.push({
+           product_id: productId,
+           name: name,
+           price: price,
+           quantity: quantity,
+           specifications: specifications
+       });
+   }
+
+   updateCart();
+   showCartNotification('Produit ajouté au panier!');
+}
+
+// Update cart
+function updateCart() {
+   // Save to localStorage
+   localStorage.setItem('passprint_cart', JSON.stringify(cart));
+
+   // Update display
+   updateCartDisplay();
+
+   // Sync with API if user is logged in
+   syncCartWithAPI();
+}
+
+// Update cart display
+function updateCartDisplay() {
+   const cartCount = document.querySelector('.cart-count');
+   const cartTotalElement = document.querySelector('.cart-total');
+   const cartItems = document.querySelector('.cart-items');
+
+   if (cartCount) {
+       cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+   }
+
+   cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+   if (cartTotalElement) {
+       cartTotalElement.textContent = formatPrice(cartTotal);
+   }
+
+   if (cartItems) {
+       cartItems.innerHTML = cart.map(item => `
+           <div class="cart-item d-flex justify-content-between align-items-center mb-2">
+               <div>
+                   <h6 class="mb-0">${item.name}</h6>
+                   <small class="text-muted">${formatPrice(item.price)} × ${item.quantity}</small>
+               </div>
+               <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${item.product_id})">
+                   <i class="fas fa-trash"></i>
+               </button>
+           </div>
+       `).join('');
+   }
+}
+
+// Remove item from cart
+function removeFromCart(productId) {
+   cart = cart.filter(item => item.product_id !== productId);
+   updateCart();
+   showCartNotification('Produit retiré du panier');
+}
+
+// Format price
+function formatPrice(price) {
+   return new Intl.NumberFormat('fr-FR', {
+       style: 'currency',
+       currency: 'XOF',
+       minimumFractionDigits: 0
+   }).format(price);
+}
+
+// Show cart notification
+function showCartNotification(message) {
+   // Create notification element if it doesn't exist
+   let notification = document.querySelector('.cart-notification');
+   if (!notification) {
+       notification = document.createElement('div');
+       notification.className = 'cart-notification position-fixed';
+       notification.style.cssText = `
+           top: 20px;
+           right: 20px;
+           z-index: 9999;
+           background: #28a745;
+           color: white;
+           padding: 1rem 1.5rem;
+           border-radius: 8px;
+           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+           transform: translateX(400px);
+           transition: transform 0.3s ease;
+       `;
+       document.body.appendChild(notification);
+   }
+
+   notification.textContent = message;
+   notification.style.transform = 'translateX(0)';
+
+   // Hide notification after 3 seconds
+   setTimeout(() => {
+       notification.style.transform = 'translateX(400px)';
+   }, 3000);
+}
+
+// Load cart from API
+async function loadCartFromAPI() {
+    try {
+        const sessionId = localStorage.getItem('session_id');
+        if (!sessionId) return;
+
+        const response = await fetch(`${API_BASE}/cart`, {
+            method: 'GET',
+            headers: {
+                'Session-ID': sessionId
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.items && data.items.length > 0) {
+                cart = data.items;
+                updateCartDisplay();
+                localStorage.setItem('passprint_cart', JSON.stringify(cart));
+            }
+        }
+    } catch (error) {
+        console.error('Error loading cart from API:', error);
+    }
+}
+
+// Sync cart with API
+async function syncCartWithAPI() {
+    try {
+        const sessionId = localStorage.getItem('session_id') || generateSessionId();
+
+        // If cart is empty, don't sync
+        if (cart.length === 0) return;
+
+        const response = await fetch(`${API_BASE}/cart`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Session-ID': sessionId
+            },
+            body: JSON.stringify({
+                product_id: cart[cart.length - 1]?.product_id,
+                quantity: cart[cart.length - 1]?.quantity,
+                specifications: cart[cart.length - 1]?.specifications
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('session_id', data.session_id);
+        }
+    } catch (error) {
+        console.error('Error syncing cart with API:', error);
+    }
+}
+
+// Generate session ID
+function generateSessionId() {
+   return 'session_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Checkout process
+async function checkout() {
+    if (cart.length === 0) {
+        alert('Votre panier est vide');
+        return;
+    }
+
+    try {
+        // Create order via API
+        const sessionId = localStorage.getItem('session_id') || generateSessionId();
+
+        const response = await fetch(`${API_BASE}/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Session-ID': sessionId
+            },
+            body: JSON.stringify({
+                customer_id: null, // Will be set if user is logged in
+                shipping_address: '',
+                shipping_phone: '',
+                shipping_email: '',
+                notes: ''
+            })
+        });
+
+        if (response.ok) {
+            const orderData = await response.json();
+
+            // Clear cart
+            cart = [];
+            updateCart();
+
+            // Show success message with order number
+            alert('✅ Commande créée avec succès!\n\nNuméro de commande: ' + orderData.order.order_number + '\nMontant: ' + formatPrice(orderData.order.total_amount));
+
+            // Redirect to order tracking page or home
+            window.location.href = 'index.html';
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erreur lors de la création de la commande');
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert('❌ Erreur lors du passage de commande: ' + error.message + '\n\nVeuillez réessayer.');
+    }
+}
+
+// Form validation functions
+function validateContactForm() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const serviceType = document.getElementById('serviceType').value;
+    const message = document.getElementById('message').value.trim();
+
+    if (!name) {
+        alert('Veuillez entrer votre nom.');
+        return false;
+    }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+        alert('Veuillez entrer un email valide.');
+        return false;
+    }
+    if (!serviceType) {
+        alert('Veuillez sélectionner un type de service.');
+        return false;
+    }
+    if (!message) {
+        alert('Veuillez entrer les détails de votre demande.');
+        return false;
+    }
+    return true;
+}
+
+function validateUploadForm() {
+    const file = document.getElementById('fileUpload').files[0];
+    if (!file) {
+        alert('Veuillez sélectionner un fichier.');
+        return false;
+    }
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'application/postscript', 'application/illustrator'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Type de fichier non supporté. Utilisez PDF, PNG, JPG, AI ou EPS.');
+        return false;
+    }
+    return true;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize cart
+    initCart();
+
+    // Contact form
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            if (!validateContactForm()) {
+                e.preventDefault();
+            }
+            // If validation passes, form will submit to Formspree
+        });
+    }
+
+    // Upload form for personalization
+    const uploadForm = document.getElementById('uploadForm');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', (e) => {
+            if (!validateUploadForm()) {
+                e.preventDefault();
+            } else {
+                // For demo, still show preview before submitting
+                e.preventDefault();
+                const file = document.getElementById('fileUpload').files[0];
+                const format = document.getElementById('format').value;
+                const quantity = document.getElementById('quantity').value;
+                const lamination = document.getElementById('lamination').checked;
+                const decoupe = document.getElementById('decoupe').checked;
+                // Simulate preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    const details = `Format: ${format}, Quantité: ${quantity}, Lamination: ${lamination ? 'Oui' : 'Non'}, Découpe: ${decoupe ? 'Oui' : 'Non'}`;
+                    document.getElementById('previewDetails').textContent = details;
+                    document.getElementById('preview').style.display = 'block';
+                    // In production, you would submit the form here
+                    alert('Fichier uploadé avec succès ! (Simulation)');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+
+    // Login/Register forms
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            localStorage.setItem('loggedIn', 'true');
+            showDashboard();
+            alert('Connexion réussie');
+        });
+    }
+
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            localStorage.setItem('loggedIn', 'true');
+            showDashboard();
+            alert('Inscription réussie');
+        });
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('loggedIn');
+            showAuth();
+            alert('Déconnexion réussie');
+        });
+    }
+
+    function showDashboard() {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'block';
+    }
+
+    function showAuth() {
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('dashboardSection').style.display = 'none';
+    }
+
+    // Check login status on load
+    if (localStorage.getItem('loggedIn')) {
+        showDashboard();
+    }
+
+    // Add cart buttons to product cards
+    addCartButtonsToProducts();
+
+    // Stripe payment
+    const stripe = Stripe('pk_test_...'); // Replace with your test publishable key
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    const cardErrors = document.getElementById('card-errors');
+
+    if (document.getElementById('card-element')) {
+        cardElement.mount('#card-element');
+    }
+
+    cardElement.addEventListener('change', (event) => {
+        if (event.error) {
+            cardErrors.textContent = event.error.message;
+        } else {
+            cardErrors.textContent = '';
+        }
+    });
+
+    const paymentForm = document.getElementById('paymentForm');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const { error } = await stripe.createPaymentMethod({
+                type: 'card',
+                card: cardElement,
+            });
+            if (error) {
+                cardErrors.textContent = error.message;
+            } else {
+                alert('Paiement simulé réussi ! Commande passée.');
+            }
+        });
+    }
+
+    // Newsletter form
+    const newsletterForm = document.getElementById('newsletterForm');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', (e) => {
+            const email = newsletterForm.querySelector('input[type="email"]').value.trim();
+            if (!email || !/\S+@\S+\.\S+/.test(email)) {
+                e.preventDefault();
+                alert('Veuillez entrer un email valide.');
+            }
+            // If valid, form will submit to Mailchimp
+        });
+    }
+
+    // Back to Top Button
+    const backToTopBtn = document.getElementById('backToTop');
+    if (backToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.display = 'flex';
+            } else {
+                backToTopBtn.style.display = 'none';
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    // Image loading animations
+    document.querySelectorAll('img').forEach(img => {
+        if (img.complete) {
+            img.classList.add('loaded');
+        } else {
+            img.addEventListener('load', () => {
+                img.classList.add('loaded');
+            });
+        }
+    });
+
+    // Load products from API and add cart functionality
+    loadProductsFromAPI();
+});
+
+// Add cart buttons to product cards
+function addCartButtonsToProducts() {
+    // Add cart button to service cards
+    document.querySelectorAll('.service-card-enhanced').forEach((card, index) => {
+        const productId = `service_${index + 1}`;
+        const productName = card.querySelector('h3')?.textContent || 'Service';
+        const priceText = card.querySelector('.badge')?.textContent || 'Sur devis';
+
+        // Extract price if it's a number
+        let price = 0;
+        const priceMatch = priceText.match(/(\d+)\s*FCFA/);
+        if (priceMatch) {
+            price = parseInt(priceMatch[1]);
+        }
+
+        const cartButton = document.createElement('button');
+        cartButton.className = 'btn btn-warning btn-lg mt-3';
+        cartButton.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Ajouter au panier';
+        cartButton.onclick = () => addToCart(productId, productName, price, 1, {
+            type: 'service',
+            category: productName
+        });
+
+        // Add to existing button or create new one
+        const existingButton = card.querySelector('.btn');
+        if (existingButton) {
+            existingButton.parentNode.appendChild(cartButton);
+        }
+    });
+}
+
+// Load products from API
+async function loadProductsFromAPI() {
+    try {
+        const response = await fetch(`${API_BASE}/products`);
+        if (response.ok) {
+            const products = await response.json();
+            console.log('✅ Produits chargés depuis l\'API:', products.length);
+        }
+    } catch (error) {
+        console.error('Erreur chargement produits:', error);
+    }
+}
+
+// Enhanced authentication integration
+async function loginWithAPI(email, password) {
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('user_data', JSON.stringify(data.user));
+            return data;
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur de connexion');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        throw error;
+    }
+}
+
+async function registerWithAPI(userData) {
+    try {
+        const response = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('user_data', JSON.stringify(data.user));
+            return data;
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur d\'inscription');
+        }
+    } catch (error) {
+        console.error('Register error:', error);
+        throw error;
+    }
+}
+
+// Newsletter subscription with API
+async function subscribeNewsletterAPI(email, firstName = '', lastName = '') {
+    try {
+        const response = await fetch(`${API_BASE}/newsletter/subscribe`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, first_name: firstName, last_name: lastName })
+        });
+
+        if (response.ok) {
+            return await response.json();
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur abonnement');
+        }
+    } catch (error) {
+        console.error('Newsletter error:', error);
+        throw error;
+    }
+}
+
+// Upload file with API
+async function uploadFileAPI(file, quoteId = null) {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        if (quoteId) {
+            formData.append('quote_id', quoteId);
+        }
+
+        const response = await fetch(`${API_BASE}/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            return await response.json();
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur upload');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        throw error;
+    }
+}

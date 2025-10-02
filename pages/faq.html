@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ Professionnelle - PassPrint | Questions & Réponses Expert</title>
+    <meta name="description" content="FAQ complète PassPrint : réponses d'experts à toutes vos questions sur l'impression, les supports, les tarifs et les services professionnels à Douala.">
+    <meta name="keywords" content="FAQ PassPrint, questions impression, réponses imprimérie, guide impression Douala, support client">
+    <meta name="author" content="PassPrint">
+    <meta property="og:title" content="FAQ Professionnelle - PassPrint">
+    <meta property="og:description" content="Réponses d'experts à vos questions sur l'impression professionnelle">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" href="../images/logo.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../images/logo.svg">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Animate CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        :root {
+            --faq-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        .faq-hero {
+            background: var(--faq-gradient);
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .faq-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="60" cy="30" r="1" fill="rgba(255,255,255,0.12)"/></svg>') repeat;
+            animation: float 25s infinite linear;
+        }
+
+        .faq-card {
+            background: rgba(45, 27, 105, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .faq-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .faq-question {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: white;
+            padding: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .faq-question i {
+            margin-right: 1rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .faq-card.active .faq-question i {
+            transform: rotate(45deg);
+            color: var(--primary-color);
+        }
+
+        .faq-answer {
+            background: rgba(255, 255, 255, 0.02);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .faq-card.active .faq-answer {
+            padding: 1.5rem;
+            max-height: 500px;
+        }
+
+        .faq-category {
+            background: var(--gold-gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .search-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-input:focus {
+            outline: none;
+        }
+
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .quick-link {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .quick-link:hover {
+            background: var(--gold-gradient);
+            border-color: transparent;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .stats-section {
+            background: linear-gradient(135deg, #2D1B69 0%, #1B263B 100%);
+            border-radius: 25px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .contact-cta {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .category-tab {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .category-tab:hover,
+        .category-tab.active {
+            background: var(--gold-gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../images/logo.svg" alt="PassPrint Logo" height="70" class="d-inline-block align-top">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">À propos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link active text-gradient" href="faq.html">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Enhanced Hero Section -->
+    <section class="faq-hero text-white">
+        <div class="container position-relative">
+            <div class="row align-items-center min-vh-60">
+                <div class="col-lg-8 mx-auto text-center">
+                    <div class="animate-slide-up">
+                        <span class="badge bg-white text-dark px-3 py-2 mb-4 animate-pulse">
+                            <i class="fas fa-question-circle me-2"></i>Centre d'Aide
+                        </span>
+                        <h1 class="display-3 fw-bold mb-4 text-shadow">
+                            Questions <span class="text-gradient">Fréquentes</span>
+                        </h1>
+                        <p class="lead mb-4" style="font-size: 1.3rem; line-height: 1.6;">
+                            Trouvez rapidement les réponses à vos questions sur nos services d'impression, nos produits et nos processus.
+                        </p>
+
+                        <!-- Search Bar -->
+                        <div class="search-container mb-4">
+                            <i class="fas fa-search position-absolute" style="left: 1.5rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.7);"></i>
+                            <input type="text" class="search-input ps-5" placeholder="Rechercher une question..." id="faqSearch">
+                        </div>
+
+                        <!-- Quick Links -->
+                        <div class="quick-links">
+                            <a href="#formats" class="quick-link">
+                                <i class="fas fa-file-alt me-2"></i>Formats
+                            </a>
+                            <a href="#delais" class="quick-link">
+                                <i class="fas fa-clock me-2"></i>Délais
+                            </a>
+                            <a href="#prix" class="quick-link">
+                                <i class="fas fa-euro-sign me-2"></i>Tarifs
+                            </a>
+                            <a href="#qualite" class="quick-link">
+                                <i class="fas fa-award me-2"></i>Qualité
+                            </a>
+                            <a href="#contact" class="quick-link">
+                                <i class="fas fa-headset me-2"></i>Contact
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="py-5" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+        <div class="container">
+
+            <!-- Category Tabs -->
+            <div class="category-tabs mb-5 animate-slide-up">
+                <a href="#" class="category-tab active" data-category="all">
+                    <i class="fas fa-th-large me-2"></i>Toutes les questions
+                </a>
+                <a href="#" class="category-tab" data-category="technique">
+                    <i class="fas fa-cogs me-2"></i>Technique
+                </a>
+                <a href="#" class="category-tab" data-category="prix">
+                    <i class="fas fa-euro-sign me-2"></i>Tarifs & Devis
+                </a>
+                <a href="#" class="category-tab" data-category="delais">
+                    <i class="fas fa-clock me-2"></i>Délais & Livraison
+                </a>
+                <a href="#" class="category-tab" data-category="produits">
+                    <i class="fas fa-box me-2"></i>Produits & Services
+                </a>
+            </div>
+
+            <!-- FAQ Content -->
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+
+                    <!-- Formats et Fichiers -->
+                    <section id="formats" class="mb-5">
+                        <h2 class="h1 mb-4 text-gradient">
+                            <i class="fas fa-file-alt me-3"></i>Formats et Fichiers
+                        </h2>
+
+                        <div class="faq-card animate-slide-up" data-category="technique">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Quels formats de fichier acceptez-vous pour l'impression ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Nous acceptons tous les formats professionnels couramment utilisés :</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Formats recommandés :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>PDF (format préféré)</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>AI (Adobe Illustrator)</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>EPS (vectoriel)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Formats acceptés :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>PNG (haute résolution)</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>JPG/JPEG</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>TIFF</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Conseil :</strong> Pour une qualité optimale, privilégiez le format PDF avec fonds perdus de 3mm.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="faq-card animate-slide-up" data-category="technique" style="animation-delay: 0.2s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Quelle résolution minimale pour une impression de qualité ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>La résolution est cruciale pour obtenir un résultat professionnel :</p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3" style="background: rgba(255, 107, 53, 0.1); border-radius: 15px;">
+                                            <i class="fas fa-image fa-3x text-warning mb-2"></i>
+                                            <h5 class="text-warning">Photos</h5>
+                                            <p class="h4 text-warning mb-0">300 DPI</p>
+                                            <small class="text-muted">Minimum recommandé</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3" style="background: rgba(0, 166, 118, 0.1); border-radius: 15px;">
+                                            <i class="fas fa-vector-square fa-3x text-success mb-2"></i>
+                                            <h5 class="text-success">Vectoriel</h5>
+                                            <p class="h4 text-success mb-0">Illimité</p>
+                                            <small class="text-muted">Résolution infinie</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3" style="background: rgba(102, 126, 234, 0.1); border-radius: 15px;">
+                                            <i class="fas fa-palette fa-3x text-primary mb-2"></i>
+                                            <h5 class="text-primary">Design</h5>
+                                            <p class="h4 text-primary mb-0">150-300 DPI</p>
+                                            <small class="text-muted">Selon complexité</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Délais et Process -->
+                    <section id="delais" class="mb-5">
+                        <h2 class="h1 mb-4 text-gradient">
+                            <i class="fas fa-clock me-3"></i>Délais et Processus
+                        </h2>
+
+                        <div class="faq-card animate-slide-up" data-category="delais" style="animation-delay: 0.4s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Quels sont vos délais de production habituels ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Nos délais varient selon l'urgence et la complexité de votre projet :</p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-4" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-radius: 15px; color: white;">
+                                            <i class="fas fa-rocket fa-3x mb-3"></i>
+                                            <h5>Urgent</h5>
+                                            <p class="h3 mb-0">24h</p>
+                                            <small>Projets express</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-4" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); border-radius: 15px; color: white;">
+                                            <i class="fas fa-clock fa-3x mb-3"></i>
+                                            <h5>Express</h5>
+                                            <p class="h3 mb-0">2-3 jours</p>
+                                            <small>Projets rapides</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-4" style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); border-radius: 15px; color: white;">
+                                            <i class="fas fa-calendar-alt fa-3x mb-3"></i>
+                                            <h5>Standard</h5>
+                                            <p class="h3 mb-0">3-5 jours</p>
+                                            <small>Projets normaux</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Note :</strong> Les délais peuvent varier selon la charge de travail. Contactez-nous pour un devis précis avec délai garanti.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="faq-card animate-slide-up" data-category="delais" style="animation-delay: 0.6s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Comment se déroule le processus de commande ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Notre processus est simple et transparent, en 4 étapes :</p>
+                                <div class="row">
+                                    <div class="col-md-3 text-center">
+                                        <div class="mb-3">
+                                            <div style="width: 60px; height: 60px; background: var(--gold-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-weight: bold; font-size: 1.5rem;">1</div>
+                                            <h6 class="text-warning mt-2">Demande</h6>
+                                        </div>
+                                        <p>Envoi de votre demande avec fichiers</p>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                        <div class="mb-3">
+                                            <div style="width: 60px; height: 60px; background: var(--gold-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-weight: bold; font-size: 1.5rem;">2</div>
+                                            <h6 class="text-warning mt-2">Devis</h6>
+                                        </div>
+                                        <p>Réception du devis sous 2h</p>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                        <div class="mb-3">
+                                            <div style="width: 60px; height: 60px; background: var(--gold-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-weight: bold; font-size: 1.5rem;">3</div>
+                                            <h6 class="text-warning mt-2">Production</h6>
+                                        </div>
+                                        <p>Impression et contrôle qualité</p>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                        <div class="mb-3">
+                                            <div style="width: 60px; height: 60px; background: var(--gold-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-weight: bold; font-size: 1.5rem;">4</div>
+                                            <h6 class="text-warning mt-2">Remise</h6>
+                                        </div>
+                                        <p>Remise en main propre</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Tarifs et Devis -->
+                    <section id="prix" class="mb-5">
+                        <h2 class="h1 mb-4 text-gradient">
+                            <i class="fas fa-euro-sign me-3"></i>Tarifs et Devis
+                        </h2>
+
+                        <div class="faq-card animate-slide-up" data-category="prix" style="animation-delay: 0.8s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Comment sont calculés vos tarifs d'impression ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Nos tarifs sont calculés de manière transparente selon plusieurs critères :</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Format et quantité :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>Plus le format est grand, plus le prix augmente</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Tarifs dégressifs selon la quantité</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Formats personnalisés sur devis</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Support et finition :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>Type de papier (couché, mat, brillant)</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Finition (vernis, pelliculage, dorure)</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Support rigide ou souple</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="alert alert-success mt-3">
+                                    <i class="fas fa-gift me-2"></i>
+                                    <strong>Avantage :</strong> Devis gratuit et détaillé sous 2 heures ouvrées !
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="faq-card animate-slide-up" data-category="prix" style="animation-delay: 1s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Proposez-vous des tarifs préférentiels pour les professionnels ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Oui, nous proposons des conditions avantageuses pour nos clients professionnels :</p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3" style="background: rgba(0, 166, 118, 0.1); border-radius: 15px;">
+                                            <i class="fas fa-building fa-3x text-success mb-2"></i>
+                                            <h6 class="text-success">Entreprises</h6>
+                                            <p>Tarifs préférentiels</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3" style="background: rgba(255, 107, 53, 0.1); border-radius: 15px;">
+                                            <i class="fas fa-handshake fa-3x text-warning mb-2"></i>
+                                            <h6 class="text-warning">Partenaires</h6>
+                                            <p>Remises fidélité</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3" style="background: rgba(102, 126, 234, 0.1); border-radius: 15px;">
+                                            <i class="fas fa-chart-line fa-3x text-primary mb-2"></i>
+                                            <h6 class="text-primary">Volume</h6>
+                                            <p>Tarifs dégressifs</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="mt-3"><strong>Contactez-nous</strong> pour discuter de vos besoins récurrents et bénéficier de nos tarifs professionnels.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Produits et Services -->
+                    <section id="produits" class="mb-5">
+                        <h2 class="h1 mb-4 text-gradient">
+                            <i class="fas fa-box me-3"></i>Produits et Services
+                        </h2>
+
+                        <div class="faq-card animate-slide-up" data-category="produits" style="animation-delay: 1.2s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Quels types de supports proposez-vous ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Nous proposons une large gamme de supports d'impression adaptés à tous vos besoins :</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Supports souples :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>Banderoles PVC</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Stickers vinyle</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Affiches papier</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Toile canvas</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Supports rigides :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>Panneaux Alucobond</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>PVC Forex</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Dibond aluminium</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Plexiglas</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="faq-card animate-slide-up" data-category="produits" style="animation-delay: 1.4s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Puis-je personnaliser mes clés USB avec mon logo ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Absolument ! Nous proposons un service complet de personnalisation :</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Options de personnalisation :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>Impression de votre logo</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Gravure laser</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Emballage personnalisé</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>Clés USB de différentes capacités</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Capacités disponibles :</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-warning me-2"></i>16 GB - 3 500 FCFA</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>32 GB - 4 000 FCFA</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>64 GB - 5 000 FCFA</li>
+                                            <li><i class="fas fa-check text-warning me-2"></i>128 GB - 7 000 FCFA</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Idée :</strong> Parfait pour vos cadeaux d'entreprise ou supports de présentation !
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Contact et Support -->
+                    <section id="contact" class="mb-5">
+                        <h2 class="h1 mb-4 text-gradient">
+                            <i class="fas fa-headset me-3"></i>Contact et Support
+                        </h2>
+
+                        <div class="faq-card animate-slide-up" data-category="support" style="animation-delay: 1.6s;">
+                            <button class="faq-question">
+                                <i class="fas fa-plus"></i>
+                                Comment vous contacter pour un devis personnalisé ?
+                            </button>
+                            <div class="faq-answer">
+                                <p>Plusieurs moyens simples et rapides pour nous contacter :</p>
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        <div class="contact-method p-3">
+                                            <i class="fas fa-phone fa-3x text-warning mb-3"></i>
+                                            <h6>Téléphone</h6>
+                                            <p>696 465 609<br>677 863 752</p>
+                                            <a href="tel:+237696465609" class="btn btn-warning btn-sm">Appeler</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <div class="contact-method p-3">
+                                            <i class="fab fa-whatsapp fa-3x text-success mb-3"></i>
+                                            <h6>WhatsApp</h6>
+                                            <p>Communication instantanée</p>
+                                            <a href="https://wa.me/237696465609" class="btn btn-success btn-sm" target="_blank">Écrire</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <div class="contact-method p-3">
+                                            <i class="fas fa-envelope fa-3x text-info mb-3"></i>
+                                            <h6>Email</h6>
+                                            <p>passprint@yahoo.com</p>
+                                            <a href="mailto:passprint@yahoo.com" class="btn btn-info btn-sm">Email</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-clock me-2"></i>
+                                    <strong>Disponibilité :</strong> Lundi à Samedi de 8h00 à 21h00 - Réponse garantie sous 2 heures ouvrées !
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Contact CTA -->
+            <div class="contact-cta animate-slide-up">
+                <i class="fas fa-comments fa-3x text-warning mb-4 animate-float"></i>
+                <h3 class="h2 mb-3">Vous n'avez pas trouvé la réponse à votre question ?</h3>
+                <p class="lead mb-4">Notre équipe d'experts est là pour vous aider. Contactez-nous directement pour une réponse personnalisée.</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="contact.html" class="btn btn-warning btn-lg">
+                        <i class="fas fa-paper-plane me-2"></i>Nous Contacter
+                    </a>
+                    <a href="tel:+237696465609" class="btn btn-outline-warning btn-lg">
+                        <i class="fas fa-phone me-2"></i>Nous Appeler
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Enhanced Footer -->
+    <footer class="py-5" style="background: linear-gradient(135deg, #2D1B69 0%, #0D1B2A 100%);">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 mb-4">
+                    <img src="../images/logo.svg" alt="PassPrint Logo" height="80" class="mb-4">
+                    <p class="mb-4" style="font-size: 1.1rem;">
+                        Votre partenaire de confiance pour tous vos projets d'impression professionnelle à Douala depuis plus de 10 ans.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="https://wa.me/237696465609" class="btn btn-success btn-lg" target="_blank">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="tel:+237696465609" class="btn btn-warning btn-lg">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <a href="mailto:passprint@yahoo.com" class="btn btn-info btn-lg">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Services</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Impression Grand Format</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Signalétique</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Papier Premium</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Supports Rigides</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Support</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="faq.html" class="text-white text-decoration-none">FAQ</a></li>
+                        <li class="mb-2"><a href="blog.html" class="text-white text-decoration-none">Blog</a></li>
+                        <li class="mb-2"><a href="contact.html" class="text-white text-decoration-none">Contact</a></li>
+                        <li class="mb-2"><a href="../index.html" class="text-white text-decoration-none">À propos</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-warning mb-3">Besoin d'Aide ?</h5>
+                    <div class="mb-3">
+                        <p class="mb-2"><i class="fas fa-phone me-2 text-warning"></i>696 465 609 - 677 863 752</p>
+                        <p class="mb-2"><i class="fas fa-envelope me-2 text-warning"></i>passprint@yahoo.com</p>
+                        <p class="mb-0"><i class="fas fa-clock me-2 text-warning"></i>Lun-Sam: 8h00-21h00</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-warning">Réponse 2h</span>
+                        <span class="badge bg-warning">Expertise 10+ ans</span>
+                        <span class="badge bg-warning">Devis Gratuit</span>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255, 107, 53, 0.3);">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 PassPrint. Tous droits réservés.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text-warning">
+                        <i class="fas fa-heart me-2"></i>
+                        FAQ créée avec expertise pour répondre à toutes vos questions
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="btn btn-warning back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Enhanced FAQ Page Interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // FAQ Search functionality
+            const searchInput = document.getElementById('faqSearch');
+            const faqCards = document.querySelectorAll('.faq-card');
+            const categoryTabs = document.querySelectorAll('.category-tab');
+
+            // Search filter
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+
+                faqCards.forEach(card => {
+                    const question = card.querySelector('.faq-question').textContent.toLowerCase();
+                    const answer = card.querySelector('.faq-answer').textContent.toLowerCase();
+
+                    if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+
+            // Category filter
+            categoryTabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Update active state
+                    categoryTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const category = this.dataset.category;
+
+                    faqCards.forEach(card => {
+                        if (category === 'all' || card.dataset.category === category) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // FAQ Accordion functionality
+            faqCards.forEach(card => {
+                const question = card.querySelector('.faq-question');
+                const answer = card.querySelector('.faq-answer');
+
+                question.addEventListener('click', function() {
+                    // Close all other FAQs
+                    faqCards.forEach(otherCard => {
+                        if (otherCard !== card) {
+                            otherCard.classList.remove('active');
+                        }
+                    });
+
+                    // Toggle current FAQ
+                    card.classList.toggle('active');
+                });
+            });
+
+            // Quick links scroll
+            document.querySelectorAll('.quick-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Back to top functionality
+            const backToTop = document.getElementById('backToTop');
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTop.style.display = 'flex';
+                } else {
+                    backToTop.style.display = 'none';
+                }
+            });
+
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Animate elements on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-slide-up');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.faq-card, .contact-cta').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Navbar scroll effect
+            window.addEventListener('scroll', function() {
+                const navbar = document.querySelector('.navbar');
+                if (window.pageYOffset > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+
+            // Add stagger animation to FAQ cards
+            faqCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>

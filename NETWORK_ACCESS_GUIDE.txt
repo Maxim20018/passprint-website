@@ -1,0 +1,42 @@
+🌐 NETWORK ACCESS TROUBLESHOOTING
+
+If other devices can't connect to your PassPrint website:
+
+✅ 1. CHECK WIFI NETWORK
+- Make sure all devices are on the SAME WiFi network
+- Phone and computer must be connected to the same router
+
+✅ 2. FIND YOUR IP ADDRESS
+- The launcher shows your IP when it starts
+- Or open Command Prompt and type: ipconfig
+- Look for "IPv4 Address" starting with 192.168
+
+✅ 3. FIREWALL SETTINGS
+- Windows Firewall might block the connection
+- Allow Python through Windows Firewall:
+  * Search: "Windows Defender Firewall"
+  * Click "Allow an app through firewall"
+  * Find Python and check both boxes
+
+✅ 4. TEST CONNECTION
+- On your computer: http://localhost:8000 (should work)
+- On other devices: http://YOUR_IP:8000 (replace YOUR_IP with actual IP)
+
+✅ 5. ALTERNATIVE METHOD
+- If network doesn't work, use a USB drive
+- Copy the entire passprint-website folder to USB
+- Open index.html directly on other computers
+
+📱 QUICK TEST:
+1. Start the server on your computer
+2. On your phone, open browser
+3. Type: http://YOUR_COMPUTER_IP:8000
+4. Should see the PassPrint website
+
+🔧 IF STILL NOT WORKING:
+- Try disabling VPN
+- Check if hotspot is being used
+- Restart router if necessary
+- Try connecting devices directly to same router
+
+The server IS working - it's just a network configuration issue!

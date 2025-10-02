@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services Professionnels - PassPrint | Imprimerie Expert Douala</title>
+    <meta name="description" content="Services d'imprimerie premium : banderoles, macarons, panneaux rigides, impression grand format. Personnalisation web-to-print avec devis instantané.">
+    <meta name="keywords" content="imprimerie Douala, services impression, banderoles personnalisées, macarons stickers, panneaux rigides, impression grand format, devis imprimante">
+    <meta property="og:title" content="Services Professionnels - PassPrint">
+    <meta property="og:description" content="Imprimerie expert à Douala : Services premium d'impression et personnalisation">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" href="../images/logo.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../images/logo.svg">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Animate CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        :root {
+            --services-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --card-gradient: linear-gradient(135deg, rgba(45, 27, 105, 0.9) 0%, rgba(27, 38, 59, 0.9) 100%);
+            --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B35 100%);
+        }
+
+        .services-hero {
+            background: var(--services-gradient);
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .services-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="60" cy="30" r="1" fill="rgba(255,255,255,0.12)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 107, 53, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 60%;
+            right: 20%;
+            animation-delay: -2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            left: 70%;
+            animation-delay: -4s;
+        }
+
+        .service-card {
+            background: var(--card-gradient);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gold-gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: var(--gold-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover .service-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .service-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .process-step {
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .process-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: var(--gold-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .process-step:nth-child(1)::before { content: '1'; }
+        .process-step:nth-child(2)::before { content: '2'; }
+        .process-step:nth-child(3)::before { content: '3'; }
+        .process-step:nth-child(4)::before { content: '4'; }
+
+        .stats-counter {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 107, 53, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: rgba(45, 27, 105, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary-color);
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .pricing-card.popular {
+            background: var(--gold-gradient);
+            color: white;
+            border: none;
+        }
+
+        .pricing-card.popular .price {
+            color: white;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .section-divider {
+            height: 2px;
+            background: var(--gold-gradient);
+            margin: 4rem 0;
+            position: relative;
+        }
+
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 8px;
+            background: var(--gold-gradient);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../images/logo.svg" alt="PassPrint Logo" height="70" class="d-inline-block align-top">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">À propos</a></li>
+                    <li class="nav-item"><a class="nav-link active text-gradient" href="services.html">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="faq.html">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Enhanced Hero Section -->
+    <section class="services-hero text-white">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+        <div class="container position-relative">
+            <div class="row align-items-center min-vh-70">
+                <div class="col-lg-6">
+                    <div class="animate-slide-left">
+                        <span class="badge bg-white text-dark px-3 py-2 mb-4 animate-pulse">
+                            <i class="fas fa-star me-2"></i>Services Premium
+                        </span>
+                        <h1 class="display-3 fw-bold mb-4 text-shadow">
+                            Services d'<span class="text-gradient">Imprimerie</span> d'Excellence
+                        </h1>
+                        <p class="lead mb-4" style="font-size: 1.3rem; line-height: 1.6;">
+                            De la création à la livraison, nous transformons vos idées en supports d'impression exceptionnels avec un savoir-faire artisanal et une technologie de pointe.
+                        </p>
+                        <div class="d-flex flex-wrap gap-3 mb-5">
+                            <a href="#services" class="btn btn-warning btn-lg px-5 py-3 animate-float">
+                                <i class="fas fa-eye me-2"></i>Découvrir nos services
+                            </a>
+                            <a href="#devis" class="btn btn-outline-light btn-lg px-5 py-3">
+                                <i class="fas fa-calculator me-2"></i>Devis gratuit
+                            </a>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="stats-counter">500+</div>
+                                <p class="mb-0">Clients satisfaits</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-counter">10K+</div>
+                                <p class="mb-0">Projets réalisés</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-counter">10+</div>
+                                <p class="mb-0">Années d'expérience</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="animate-slide-right">
+                        <div class="glass-card p-4 text-center">
+                            <i class="fas fa-print fa-5x text-warning mb-4"></i>
+                            <h3 class="h2 mb-3">Expertise Professionnelle</h3>
+                            <p class="mb-4">Bénéficiez de notre expertise de plus de 10 ans dans le domaine de l'impression professionnelle à Douala.</p>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                    <p class="mb-0">Livraison rapide</p>
+                                </div>
+                                <div class="col-6">
+                                    <i class="fas fa-award fa-2x text-warning mb-2"></i>
+                                    <p class="mb-0">Qualité garantie</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Services Section -->
+        <section id="services" class="py-5" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+            <div class="container">
+                <div class="text-center mb-5 animate-slide-up">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Nos Services Premium</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto; font-size: 1.3rem;">
+                        Découvrez notre gamme complète de services d'impression professionnelle, conçus pour répondre à tous vos besoins avec excellence et précision.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Banderoles -->
+                    <div class="col-lg-6">
+                        <div class="service-card animate-slide-up">
+                            <div class="service-icon">
+                                <i class="fas fa-flag"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Banderoles Publicitaires</h3>
+                            <p class="mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                                Banderoles de qualité supérieure pour vos événements, salons professionnels et campagnes publicitaires. Résistantes aux intempéries et aux UV.
+                            </p>
+                            <div class="row mb-4">
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Formats</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>A0 à A6</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Personnalisé</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Grand format</li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Matériaux</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>PVC Premium</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Toile Mesh</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Vinyle renforcé</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <a href="#devis" class="btn btn-warning btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>Commander
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Macarons/Stickers -->
+                    <div class="col-lg-6">
+                        <div class="service-card animate-slide-up" style="animation-delay: 0.2s;">
+                            <div class="service-icon">
+                                <i class="fas fa-sticky-note"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Macarons & Stickers</h3>
+                            <p class="mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                                Autocollants personnalisés, macarons pour véhicules et signalétique intérieure. Découpe sur mesure et finitions professionnelles.
+                            </p>
+                            <div class="row mb-4">
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Types</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>Vinyle adhésif</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Papier couché</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Transparent</li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Options</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>Découpe forme</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Laminage</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Dorure à chaud</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <a href="#devis" class="btn btn-warning btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>Commander
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Panneaux Rigides -->
+                    <div class="col-lg-6">
+                        <div class="service-card animate-slide-up" style="animation-delay: 0.4s;">
+                            <div class="service-icon">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Panneaux Rigides</h3>
+                            <p class="mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                                Panneaux publicitaires rigides pour usage intérieur et extérieur. Supports premium pour un impact visuel maximal.
+                            </p>
+                            <div class="row mb-4">
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Supports</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>Alucobond</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>PVC Forex</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Dibond</li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Épaisseurs</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>3mm - 10mm</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Format A0+</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Sur mesure</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <a href="#devis" class="btn btn-warning btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>Commander
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Impression Grand Format -->
+                    <div class="col-lg-6">
+                        <div class="service-card animate-slide-up" style="animation-delay: 0.6s;">
+                            <div class="service-icon">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </div>
+                            <h3 class="h2 mb-3">Grand Format</h3>
+                            <p class="mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                                Impression grand format pour vos événements exceptionnels. Posters, kakémonos, stands d'exposition et signalétique XL.
+                            </p>
+                            <div class="row mb-4">
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Applications</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>Posters événementiels</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Kakémonos</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Stands PLV</li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-6">
+                                    <h5 class="text-warning mb-2">Qualité</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-warning me-2"></i>Résolution HD</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Couleurs vives</li>
+                                        <li><i class="fas fa-check text-warning me-2"></i>Longue durée</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <a href="#devis" class="btn btn-warning btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>Commander
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Process Section -->
+        <section class="py-5" style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Notre Processus</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto;">
+                        Un workflow optimisé pour garantir des résultats exceptionnels à chaque étape de votre projet.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="process-step animate-slide-up">
+                            <i class="fas fa-search fa-3x text-warning mb-4"></i>
+                            <h4>Consultation</h4>
+                            <p>Nous analysons vos besoins et vous conseillons sur les meilleures solutions techniques et créatives.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="process-step animate-slide-up" style="animation-delay: 0.2s;">
+                            <i class="fas fa-magic fa-3x text-warning mb-4"></i>
+                            <h4>Création</h4>
+                            <p>Design sur mesure et préparation technique de vos fichiers pour une qualité d'impression optimale.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="process-step animate-slide-up" style="animation-delay: 0.4s;">
+                            <i class="fas fa-print fa-3x text-warning mb-4"></i>
+                            <h4>Production</h4>
+                            <p>Impression professionnelle avec contrôle qualité rigoureux et respect des délais annoncés.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="process-step animate-slide-up" style="animation-delay: 0.6s;">
+                            <i class="fas fa-handshake fa-3x text-warning mb-4"></i>
+                            <h4>Remise</h4>
+                            <p>Emballage sécurisé et remise en main propre à nos locaux ou préparation pour enlèvement.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enhanced Upload Section -->
+        <section id="devis" class="py-5" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Devis Instantané</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto;">
+                        Obtenez un devis personnalisé en quelques clics avec notre outil de personnalisation web-to-print.
+                    </p>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="upload-zone" id="uploadZone">
+                            <i class="fas fa-cloud-upload-alt fa-4x text-warning mb-4"></i>
+                            <h3>Glissez votre fichier ici</h3>
+                            <p class="mb-4">Ou cliquez pour sélectionner un fichier</p>
+                            <p class="text-muted">Formats acceptés: PDF, PNG, JPG, AI, EPS (max 50MB)</p>
+                            <input type="file" id="fileUpload" class="d-none" accept=".pdf,.png,.jpg,.jpeg,.ai,.eps">
+                            <button class="btn btn-warning btn-lg" onclick="document.getElementById('fileUpload').click()">
+                                <i class="fas fa-folder-open me-2"></i>Parcourir les fichiers
+                            </button>
+                        </div>
+
+                        <form id="projectForm" class="mt-4" style="display: none;">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Format</label>
+                                    <select class="form-select" name="format">
+                                        <option>A4</option>
+                                        <option>A3</option>
+                                        <option>A2</option>
+                                        <option>A1</option>
+                                        <option>A0</option>
+                                        <option>Personnalisé</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Quantité</label>
+                                    <input type="number" class="form-select" name="quantity" min="1" value="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Délai</label>
+                                    <select class="form-select" name="deadline">
+                                        <option>Standard (3-5 jours)</option>
+                                        <option>Express (24-48h)</option>
+                                        <option>Urgent (même jour)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <h5>Options supplémentaires</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="lamination" name="lamination">
+                                            <label class="form-check-label" for="lamination">Lamination mate/brillante</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="decoupe" name="decoupe">
+                                            <label class="form-check-label" for="decoupe">Découpe personnalisée</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="dorure" name="dorure">
+                                            <label class="form-check-label" for="dorure">Dorure à chaud</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="vernish" name="vernish">
+                                            <label class="form-check-label" for="vernish">Vernis sélectif</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-warning btn-lg px-5">
+                                    <i class="fas fa-calculator me-2"></i>Calculer le devis
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="previewSection" class="mt-4" style="display: none;">
+                            <div class="glass-card p-4">
+                                <h4 class="mb-4 text-gradient">Aperçu de votre projet</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <img id="previewImg" src="" alt="Aperçu" class="img-fluid rounded">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Détails du projet</h5>
+                                        <div id="previewDetails"></div>
+                                        <div class="mt-3">
+                                            <div class="h4 text-warning" id="estimatedPrice">Calcul en cours...</div>
+                                            <button class="btn btn-success btn-lg mt-3">
+                                                <i class="fas fa-shopping-cart me-2"></i>Commander maintenant
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Showcase -->
+        <section class="py-5" style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="display-4 fw-bold mb-4 text-gradient">Nos Produits Complémentaires</h2>
+                    <p class="lead" style="max-width: 600px; margin: 0 auto;">
+                        Découvrez notre sélection de fournitures de bureau et supports numériques de qualité professionnelle.
+                    </p>
+                </div>
+
+                <!-- Papier Premium -->
+                <div class="mb-5">
+                    <div class="glass-card p-4 mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                <i class="fas fa-file-alt fa-4x text-warning mb-3"></i>
+                                <h3 class="h2">Papier Premium</h3>
+                            </div>
+                            <div class="col-md-9">
+                                <p class="mb-3" style="font-size: 1.1rem;">
+                                    Large gamme de papiers de qualité supérieure pour tous vos besoins d'impression professionnelle.
+                                </p>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/TECNOSPEED.jpg" class="img-fluid rounded mb-3" alt="Papier A4 80g">
+                                            <h6>Papier A4 80g</h6>
+                                            <small class="text-muted">Sur devis</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/Double A A4.jpg" class="img-fluid rounded mb-3" alt="Papier A4 120g">
+                                            <h6>Papier A4 120g</h6>
+                                            <small class="text-muted">Sur devis</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/DOUBLE A A3.jpg" class="img-fluid rounded mb-3" alt="Papier A3 80g">
+                                            <h6>Papier A3 80g</h6>
+                                            <small class="text-muted">Sur devis</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/navigator.jpg" class="img-fluid rounded mb-3" alt="Papier A3 120g">
+                                            <h6>Papier A3 120g</h6>
+                                            <small class="text-muted">Sur devis</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clés USB -->
+                <div class="mb-5">
+                    <div class="glass-card p-4 mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                <i class="fas fa-usb fa-4x text-warning mb-3"></i>
+                                <h3 class="h2">Clés USB</h3>
+                            </div>
+                            <div class="col-md-9">
+                                <p class="mb-3" style="font-size: 1.1rem;">
+                                    Supports de stockage personnalisables pour vos présentations et distributions professionnelles.
+                                </p>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/USB128.jpg" class="img-fluid rounded mb-3" alt="Clé USB 128GB">
+                                            <h6>Clé USB 128GB</h6>
+                                            <div class="price text-warning">7 000 FCFA</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/16G.jpg" class="img-fluid rounded mb-3" alt="Clé USB 16GB">
+                                            <h6>Clé USB 16GB</h6>
+                                            <div class="price text-warning">3 500 FCFA</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/32G.jpg" class="img-fluid rounded mb-3" alt="Clé USB 32GB">
+                                            <h6>Clé USB 32GB</h6>
+                                            <div class="price text-warning">4 000 FCFA</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="pricing-card">
+                                            <img src="../images/64G.jpg" class="img-fluid rounded mb-3" alt="Clé USB 64GB">
+                                            <h6>Clé USB 64GB</h6>
+                                            <div class="price text-warning">5 000 FCFA</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accessoires -->
+                <div class="mb-5">
+                    <div class="glass-card p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                <i class="fas fa-boxes fa-4x text-warning mb-3"></i>
+                                <h3 class="h2">Accessoires de Bureau</h3>
+                            </div>
+                            <div class="col-md-9">
+                                <p class="mb-3" style="font-size: 1.1rem;">
+                                    Tout le nécessaire pour équiper votre espace de travail avec des fournitures de qualité professionnelle.
+                                </p>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="pricing-card">
+                                            <img src="../images/ENVELOPPE.jpg" class="img-fluid rounded mb-3" alt="Enveloppes A4">
+                                            <h6>Enveloppes A4</h6>
+                                            <div class="price text-warning">1 800 FCFA</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="pricing-card">
+                                            <img src="../images/cartes.jpg" class="img-fluid rounded mb-3" alt="Cartes de visite">
+                                            <h6>Cartes de visite</h6>
+                                            <div class="price text-warning">25 000 FCFA</div>
+                                            <small class="text-muted">500 exemplaires</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enhanced CTA Section -->
+        <section class="py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="container">
+                <div class="text-center">
+                    <div class="animate-slide-up">
+                        <i class="fas fa-rocket fa-4x text-white mb-4 animate-pulse"></i>
+                        <h2 class="display-5 fw-bold mb-4">Prêt à Donner Vie à Votre Projet ?</h2>
+                        <p class="lead mb-4" style="font-size: 1.3rem; max-width: 600px; margin: 0 auto;">
+                            Bénéficiez de notre expertise de plus de 10 ans et de notre engagement qualité pour des résultats exceptionnels.
+                        </p>
+                        <div class="d-flex justify-content-center gap-3 flex-wrap">
+                            <a href="contact.html" class="btn btn-warning btn-lg px-5 py-3">
+                                <i class="fas fa-paper-plane me-2"></i>Demander un devis
+                            </a>
+                            <a href="tel:+237696465609" class="btn btn-outline-light btn-lg px-5 py-3">
+                                <i class="fas fa-phone me-2"></i>Nous appeler
+                            </a>
+                        </div>
+                        <div class="mt-4 text-white">
+                            <p class="mb-2"><i class="fas fa-clock me-2"></i>Lundi - Samedi : 8h00 - 21h00</p>
+                            <p class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>Angerapheal, Face auto-école française, Douala</p>
+                            <p class="mb-0"><i class="fas fa-hand-holding me-2"></i>Retrait sur place uniquement</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Enhanced Footer -->
+    <footer class="py-5" style="background: linear-gradient(135deg, #2D1B69 0%, #0D1B2A 100%);">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 mb-4">
+                    <img src="../images/logo.svg" alt="PassPrint Logo" height="80" class="mb-4">
+                    <p class="mb-4" style="font-size: 1.1rem;">
+                        Imprimerie professionnelle à Douala spécialisée dans les supports publicitaires et fournitures de bureau premium depuis plus de 10 ans.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="https://wa.me/237696465609" class="btn btn-success btn-lg" target="_blank">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="tel:+237696465609" class="btn btn-warning btn-lg">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <a href="mailto:passprint@yahoo.com" class="btn btn-info btn-lg">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Services</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#services" class="text-white text-decoration-none">Banderoles</a></li>
+                        <li class="mb-2"><a href="#services" class="text-white text-decoration-none">Macarons</a></li>
+                        <li class="mb-2"><a href="#services" class="text-white text-decoration-none">Panneaux</a></li>
+                        <li class="mb-2"><a href="#services" class="text-white text-decoration-none">Grand Format</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Support</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="faq.html" class="text-white text-decoration-none">FAQ</a></li>
+                        <li class="mb-2"><a href="contact.html" class="text-white text-decoration-none">Contact</a></li>
+                        <li class="mb-2"><a href="#devis" class="text-white text-decoration-none">Devis</a></li>
+                        <li class="mb-2"><a href="blog.html" class="text-white text-decoration-none">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-warning mb-3">Contact Rapide</h5>
+                    <div class="mb-3">
+                        <p class="mb-2"><i class="fas fa-map-marker-alt me-2 text-warning"></i>Angerapheal, Face auto-école française</p>
+                        <p class="mb-2"><i class="fas fa-phone me-2 text-warning"></i>696 465 609 - 677 863 752</p>
+                        <p class="mb-2"><i class="fas fa-envelope me-2 text-warning"></i>passprint@yahoo.com</p>
+                        <p class="mb-0"><i class="fas fa-clock me-2 text-warning"></i>Lun-Sam: 8h00-21h00</p>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255, 107, 53, 0.3);">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 PassPrint. Tous droits réservés.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text-warning">
+                        <i class="fas fa-heart me-2"></i>
+                        Site créé avec passion pour l'excellence d'impression
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="btn btn-warning back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Enhanced interactions for services page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Upload zone functionality
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileUpload');
+            const projectForm = document.getElementById('projectForm');
+            const previewSection = document.getElementById('previewSection');
+
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                uploadZone.classList.add('dragover');
+            }
+
+            function unhighlight(e) {
+                uploadZone.classList.remove('dragover');
+            }
+
+            uploadZone.addEventListener('drop', handleDrop, false);
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    showProjectForm();
+                }
+            }
+
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    showProjectForm();
+                }
+            });
+
+            function showProjectForm() {
+                uploadZone.style.display = 'none';
+                projectForm.style.display = 'block';
+                previewSection.style.display = 'block';
+
+                // Show preview
+                const file = fileInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('previewImg').src = e.target.result;
+                        document.getElementById('previewDetails').innerHTML = `
+                            <p><strong>Fichier:</strong> ${file.name}</p>
+                            <p><strong>Taille:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p><strong>Type:</strong> ${file.type || 'Non spécifié'}</p>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Back to top functionality
+            const backToTop = document.getElementById('backToTop');
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTop.style.display = 'flex';
+                } else {
+                    backToTop.style.display = 'none';
+                }
+            });
+
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Animate elements on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-slide-up');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.service-card, .process-step, .glass-card').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Navbar scroll effect
+            window.addEventListener('scroll', function() {
+                const navbar = document.querySelector('.navbar');
+                if (window.pageYOffset > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

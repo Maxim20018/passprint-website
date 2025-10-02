@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Professionnel - PassPrint | Conseils d'Impression & Actualités</title>
+    <meta name="description" content="Blog expert en impression : conseils techniques, tendances 2024, guides pratiques et actualités du secteur. Expertise professionnelle PassPrint Douala.">
+    <meta name="keywords" content="blog impression, conseils papier, tendances signalétique, guide impression, actualités imprimérie Douala">
+    <meta name="author" content="PassPrint">
+    <meta property="og:title" content="Blog Professionnel - PassPrint">
+    <meta property="og:description" content="Conseils d'experts et actualités sur l'impression professionnelle">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" href="../images/logo.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../images/logo.svg">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Animate CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        :root {
+            --blog-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --card-gradient: linear-gradient(135deg, rgba(45, 27, 105, 0.9) 0%, rgba(27, 38, 59, 0.9) 100%);
+            --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B35 100%);
+        }
+
+        .blog-hero {
+            background: var(--blog-gradient);
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blog-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="60" cy="30" r="1" fill="rgba(255,255,255,0.12)"/></svg>') repeat;
+            animation: float 25s infinite linear;
+        }
+
+        .blog-card {
+            background: var(--card-gradient);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 2rem;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .blog-card-image {
+            height: 250px;
+            background: var(--gold-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blog-card-image i {
+            font-size: 4rem;
+            color: white;
+        }
+
+        .blog-card-content {
+            padding: 2rem;
+            color: white;
+        }
+
+        .blog-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .blog-category {
+            background: var(--gold-gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .featured-post {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--gold-gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .newsletter-section {
+            background: linear-gradient(135deg, #2D1B69 0%, #1B263B 100%);
+            border-radius: 25px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            color: white;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+        }
+
+        .category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .category-tag {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .category-tag:hover,
+        .category-tag.active {
+            background: var(--gold-gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin-top: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gold-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .author-avatar i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .reading-time {
+            background: rgba(255, 107, 53, 0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .social-share {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .blog-card:hover .social-share {
+            opacity: 1;
+        }
+
+        .share-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .share-button:hover {
+            background: var(--gold-gradient);
+            transform: scale(1.1);
+        }
+
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 3rem;
+        }
+
+        .pagination {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 50px;
+            padding: 0.5rem;
+        }
+
+        .page-link {
+            border: none;
+            background: transparent;
+            color: white;
+            padding: 0.75rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .page-link:hover,
+        .page-item.active .page-link {
+            background: var(--gold-gradient);
+            color: white;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../images/logo.svg" alt="PassPrint Logo" height="70" class="d-inline-block align-top">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">À propos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+                    <li class="nav-item"><a class="nav-link active text-gradient" href="blog.html">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="faq.html">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Enhanced Hero Section -->
+    <section class="blog-hero text-white">
+        <div class="container position-relative">
+            <div class="row align-items-center min-vh-60">
+                <div class="col-lg-8 mx-auto text-center">
+                    <div class="animate-slide-up">
+                        <span class="badge bg-white text-dark px-3 py-2 mb-4 animate-pulse">
+                            <i class="fas fa-newspaper me-2"></i>Blog Expert
+                        </span>
+                        <h1 class="display-3 fw-bold mb-4 text-shadow">
+                            Actualités & Conseils d'<span class="text-gradient">Impression</span>
+                        </h1>
+                        <p class="lead mb-4" style="font-size: 1.3rem; line-height: 1.6;">
+                            Découvrez nos guides pratiques, tendances du secteur et conseils d'experts pour optimiser vos projets d'impression professionnelle.
+                        </p>
+                        <div class="d-flex justify-content-center gap-3 flex-wrap">
+                            <div class="search-box-container">
+                                <i class="fas fa-search position-absolute" style="left: 1.5rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.7);"></i>
+                                <input type="text" class="search-box ps-5" placeholder="Rechercher un article..." id="blogSearch">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="py-5" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+        <div class="container">
+
+            <!-- Category Filters -->
+            <div class="category-filter justify-content-center mb-5 animate-slide-up">
+                <a href="#" class="category-tag active" data-category="all">
+                    <i class="fas fa-th-large me-2"></i>Tous les articles
+                </a>
+                <a href="#" class="category-tag" data-category="technique">
+                    <i class="fas fa-cogs me-2"></i>Techniques
+                </a>
+                <a href="#" class="category-tag" data-category="tendances">
+                    <i class="fas fa-chart-line me-2"></i>Tendances
+                </a>
+                <a href="#" class="category-tag" data-category="guides">
+                    <i class="fas fa-book me-2"></i>Guides pratiques
+                </a>
+                <a href="#" class="category-tag" data-category="actualites">
+                    <i class="fas fa-bullhorn me-2"></i>Actualités
+                </a>
+            </div>
+
+            <!-- Featured Post -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="blog-card featured-post animate-slide-up">
+                        <div class="featured-badge">
+                            <i class="fas fa-star me-1"></i>Article à la une
+                        </div>
+                        <div class="row g-0">
+                            <div class="col-lg-6">
+                                <div class="blog-card-image">
+                                    <i class="fas fa-print"></i>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="blog-card-content">
+                                    <div class="blog-meta">
+                                        <span class="blog-category">Guide Complet</span>
+                                        <span class="reading-time">
+                                            <i class="fas fa-clock me-1"></i>8 min de lecture
+                                        </span>
+                                    </div>
+                                    <h2 class="h1 mb-3">Guide Complet de l'Impression Professionnelle 2024</h2>
+                                    <p class="lead mb-4" style="font-size: 1.2rem;">
+                                        Tout ce que vous devez savoir pour réussir vos projets d'impression : du choix du support à la préparation des fichiers, en passant par les dernières tendances du marché.
+                                    </p>
+                                    <div class="author-info mb-4">
+                                        <div class="author-avatar">
+                                            <i class="fas fa-user-tie"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Équipe PassPrint</strong><br>
+                                            <small class="opacity-75">Experts en impression depuis 10+ ans</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-3">
+                                        <a href="#" class="btn btn-warning btn-lg">
+                                            <i class="fas fa-book-open me-2"></i>Lire l'article
+                                        </a>
+                                        <div class="social-share">
+                                            <button class="share-button" title="Partager sur Facebook">
+                                                <i class="fab fa-facebook-f"></i>
+                                            </button>
+                                            <button class="share-button" title="Partager sur Twitter">
+                                                <i class="fab fa-twitter"></i>
+                                            </button>
+                                            <button class="share-button" title="Partager sur LinkedIn">
+                                                <i class="fab fa-linkedin-in"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blog Posts Grid -->
+            <div class="row" id="blogPosts">
+                <!-- Article 1 -->
+                <div class="col-lg-4 col-md-6 mb-4" data-category="technique">
+                    <div class="blog-card animate-slide-up">
+                        <div class="social-share">
+                            <button class="share-button" title="Partager"><i class="fas fa-share-alt"></i></button>
+                        </div>
+                        <div class="blog-card-image">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span class="blog-category">Technique</span>
+                                <span class="reading-time">5 min</span>
+                            </div>
+                            <h3 class="h2 mb-3">Choisir le Bon Papier</h3>
+                            <p class="mb-3">Le choix du papier est crucial pour la qualité finale de votre impression. Découvrez nos conseils d'experts pour faire le bon choix.</p>
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>Marie Martin</strong><br>
+                                    <small class="opacity-75">Spécialiste Papier</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Article 2 -->
+                <div class="col-lg-4 col-md-6 mb-4" data-category="technique">
+                    <div class="blog-card animate-slide-up" style="animation-delay: 0.2s;">
+                        <div class="social-share">
+                            <button class="share-button" title="Partager"><i class="fas fa-share-alt"></i></button>
+                        </div>
+                        <div class="blog-card-image">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span class="blog-category">Design</span>
+                                <span class="reading-time">7 min</span>
+                            </div>
+                            <h3 class="h2 mb-3">Préparation des Fichiers</h3>
+                            <p class="mb-3">Guide complet pour préparer vos fichiers d'impression : résolution, couleurs, marges et formats optimaux.</p>
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>Pierre Durand</strong><br>
+                                    <small class="opacity-75">Designer Graphique</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Article 3 -->
+                <div class="col-lg-4 col-md-6 mb-4" data-category="tendances">
+                    <div class="blog-card animate-slide-up" style="animation-delay: 0.4s;">
+                        <div class="social-share">
+                            <button class="share-button" title="Partager"><i class="fas fa-share-alt"></i></button>
+                        </div>
+                        <div class="blog-card-image">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span class="blog-category">Tendances</span>
+                                <span class="reading-time">6 min</span>
+                            </div>
+                            <h3 class="h2 mb-3">Tendances Signalétique 2024</h3>
+                            <p class="mb-3">Découvrez les dernières tendances en matière de signalétique et supports publicitaires pour cette année.</p>
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>Sophie Chen</strong><br>
+                                    <small class="opacity-75">Trend Analyst</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Article 4 -->
+                <div class="col-lg-4 col-md-6 mb-4" data-category="guides">
+                    <div class="blog-card animate-slide-up" style="animation-delay: 0.6s;">
+                        <div class="social-share">
+                            <button class="share-button" title="Partager"><i class="fas fa-share-alt"></i></button>
+                        </div>
+                        <div class="blog-card-image">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span class="blog-category">Guide</span>
+                                <span class="reading-time">10 min</span>
+                            </div>
+                            <h3 class="h2 mb-3">Maintenance des Supports</h3>
+                            <p class="mb-3">Comment entretenir et prolonger la durée de vie de vos supports d'impression et signalétique.</p>
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>Jean Technic</strong><br>
+                                    <small class="opacity-75">Expert Maintenance</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Article 5 -->
+                <div class="col-lg-4 col-md-6 mb-4" data-category="actualites">
+                    <div class="blog-card animate-slide-up" style="animation-delay: 0.8s;">
+                        <div class="social-share">
+                            <button class="share-button" title="Partager"><i class="fas fa-share-alt"></i></button>
+                        </div>
+                        <div class="blog-card-image">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span class="blog-category">Écologie</span>
+                                <span class="reading-time">4 min</span>
+                            </div>
+                            <h3 class="h2 mb-3">Impression Écologique</h3>
+                            <p class="mb-3">Découvrez nos solutions d'impression respectueuses de l'environnement et nos engagements durables.</p>
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>Aïcha Green</strong><br>
+                                    <small class="opacity-75">Responsable RSE</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Article 6 -->
+                <div class="col-lg-4 col-md-6 mb-4" data-category="technique">
+                    <div class="blog-card animate-slide-up" style="animation-delay: 1s;">
+                        <div class="social-share">
+                            <button class="share-button" title="Partager"><i class="fas fa-share-alt"></i></button>
+                        </div>
+                        <div class="blog-card-image">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span class="blog-category">Innovation</span>
+                                <span class="reading-time">6 min</span>
+                            </div>
+                            <h3 class="h2 mb-3">QR Codes en Impression</h3>
+                            <p class="mb-3">Comment intégrer efficacement les QR codes dans vos supports print pour créer des expériences interactives.</p>
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>Marc Digital</strong><br>
+                                    <small class="opacity-75">Expert Digital</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-wrapper">
+                <nav aria-label="Navigation du blog">
+                    <ul class="pagination">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item active">
+                            <a class="page-link" href="#">1</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">2</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">3</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </main>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter-section animate-slide-up">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h3 class="h1 mb-3 text-gradient">Restez Informé</h3>
+                <p class="lead mb-4" style="font-size: 1.2rem;">
+                    Recevez nos derniers articles, conseils d'experts et tendances directement dans votre boîte mail.
+                </p>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="fas fa-check-circle text-warning fa-2x"></i>
+                    <span>Conseils d'impression exclusifs</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="fas fa-check-circle text-warning fa-2x"></i>
+                    <span>Tendances du marché en avant-première</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fas fa-check-circle text-warning fa-2x"></i>
+                    <span>Offres spéciales et promotions</span>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <form class="newsletter-form">
+                    <div class="mb-3">
+                        <input type="email" class="form-control form-control-lg" placeholder="Votre adresse email" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control form-control-lg" placeholder="Votre nom complet">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="newsletterConsent" required>
+                        <label class="form-check-label" for="newsletterConsent">
+                            J'accepte de recevoir la newsletter et communications de PassPrint
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-warning btn-lg w-100">
+                        <i class="fas fa-paper-plane me-2"></i>S'abonner à la Newsletter
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced Footer -->
+    <footer class="py-5" style="background: linear-gradient(135deg, #2D1B69 0%, #0D1B2A 100%);">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 mb-4">
+                    <img src="../images/logo.svg" alt="PassPrint Logo" height="80" class="mb-4">
+                    <p class="mb-4" style="font-size: 1.1rem;">
+                        Votre partenaire de confiance pour tous vos projets d'impression professionnelle à Douala. Expertise, qualité et service personnalisé depuis plus de 10 ans.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="https://wa.me/237696465609" class="btn btn-success btn-lg" target="_blank">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="tel:+237696465609" class="btn btn-warning btn-lg">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <a href="mailto:passprint@yahoo.com" class="btn btn-info btn-lg">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Services</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Impression Grand Format</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Signalétique</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Papier Premium</a></li>
+                        <li class="mb-2"><a href="services.html" class="text-white text-decoration-none">Supports Rigides</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-warning mb-3">Ressources</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="blog.html" class="text-white text-decoration-none">Blog & Conseils</a></li>
+                        <li class="mb-2"><a href="faq.html" class="text-white text-decoration-none">FAQ</a></li>
+                        <li class="mb-2"><a href="../index.html" class="text-white text-decoration-none">À propos</a></li>
+                        <li class="mb-2"><a href="contact.html" class="text-white text-decoration-none">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-warning mb-3">Contact Rapide</h5>
+                    <div class="mb-3">
+                        <p class="mb-2"><i class="fas fa-map-marker-alt me-2 text-warning"></i>Angerapheal, Face auto-école française</p>
+                        <p class="mb-2"><i class="fas fa-phone me-2 text-warning"></i>696 465 609 - 677 863 752</p>
+                        <p class="mb-2"><i class="fas fa-envelope me-2 text-warning"></i>passprint@yahoo.com</p>
+                        <p class="mb-0"><i class="fas fa-clock me-2 text-warning"></i>Lun-Sam: 8h00-21h00</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-warning">Impression HD</span>
+                        <span class="badge bg-warning">Service Rapide</span>
+                        <span class="badge bg-warning">Devis Gratuit</span>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255, 107, 53, 0.3);">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 PassPrint. Tous droits réservés.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text-warning">
+                        <i class="fas fa-heart me-2"></i>
+                        Blog créé avec expertise pour partager notre passion de l'impression
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="btn btn-warning back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Enhanced Blog Interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search functionality
+            const searchInput = document.getElementById('blogSearch');
+            const blogPosts = document.getElementById('blogPosts');
+            const categoryTags = document.querySelectorAll('.category-tag');
+
+            // Search filter
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const posts = blogPosts.querySelectorAll('.blog-card');
+
+                posts.forEach(post => {
+                    const title = post.querySelector('h3').textContent.toLowerCase();
+                    const content = post.querySelector('p').textContent.toLowerCase();
+
+                    if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                        post.style.display = 'block';
+                    } else {
+                        post.style.display = 'none';
+                    }
+                });
+            });
+
+            // Category filter
+            categoryTags.forEach(tag => {
+                tag.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Update active state
+                    categoryTags.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const category = this.dataset.category;
+                    const posts = blogPosts.querySelectorAll('.blog-card');
+
+                    posts.forEach(post => {
+                        if (category === 'all' || post.dataset.category === category) {
+                            post.style.display = 'block';
+                        } else {
+                            post.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // Social sharing functionality
+            document.querySelectorAll('.share-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.blog-card');
+                    const title = card.querySelector('h3').textContent;
+                    const url = window.location.href;
+
+                    if (this.querySelector('.fa-facebook-f')) {
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                    } else if (this.querySelector('.fa-twitter')) {
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`, '_blank');
+                    } else if (this.querySelector('.fa-linkedin-in')) {
+                        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+                    }
+                });
+            });
+
+            // Newsletter form
+            document.querySelector('.newsletter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const email = this.querySelector('input[type="email"]').value;
+                const name = this.querySelector('input[type="text"]').value;
+
+                // Simulate newsletter subscription
+                if (email) {
+                    alert(`Merci ${name || 'cher lecteur'} ! Vous êtes maintenant abonné à notre newsletter.`);
+                    this.reset();
+                }
+            });
+
+            // Back to top functionality
+            const backToTop = document.getElementById('backToTop');
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTop.style.display = 'flex';
+                } else {
+                    backToTop.style.display = 'none';
+                }
+            });
+
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Animate elements on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-slide-up');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.blog-card, .newsletter-section').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Navbar scroll effect
+            window.addEventListener('scroll', function() {
+                const navbar = document.querySelector('.navbar');
+                if (window.pageYOffset > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+
+            // Add stagger animation to blog cards
+            const cards = document.querySelectorAll('.blog-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.2}s`;
+            });
+        });
+    </script>
+</body>
+</html>

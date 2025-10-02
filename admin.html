@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrateur - PassPrint</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #FF6B35;
+            --secondary-color: #00A676;
+            --dark-bg: #2D1B69;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #4A3585 100%);
+            position: fixed;
+            left: 0;
+            top: 0;
+            color: white;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-logo img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .nav-item {
+            margin: 0.25rem 0;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            border-radius: 0 25px 25px 0;
+            margin-right: 1rem;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+            background: rgba(255, 107, 53, 0.2);
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .stats-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark-bg);
+            line-height: 1;
+        }
+
+        .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .orders-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .table th {
+            background-color: var(--dark-bg);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-confirmed { background-color: #d1ecf1; color: #0c5460; }
+        .status-processing { background-color: #d4edda; color: #155724; }
+        .status-shipped { background-color: #cce7ff; color: #004085; }
+        .status-delivered { background-color: #d1ecf1; color: #0c5460; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+
+        .btn-action {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="images/logo.svg" alt="PassPrint Logo">
+                <div>
+                    <h5 class="mb-0">PassPrint</h5>
+                    <small>Administration</small>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="orders">
+                    <i class="fas fa-shopping-cart"></i>
+                    Commandes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="products">
+                    <i class="fas fa-box"></i>
+                    Produits
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="users">
+                    <i class="fas fa-users"></i>
+                    Utilisateurs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-page="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    Analytics
+                </a>
+            </li>
+            <li class="nav-item mt-3">
+                <a class="nav-link text-danger" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Déconnexion
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <button class="btn btn-outline-secondary d-lg-none me-3" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="mb-0">Dashboard Administrateur</h1>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span id="current-date"></span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-2"></i>
+                        <span id="admin-name">Admin</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="logout()">Déconnexion</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-page">
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stats-value" id="total-users">-</div>
+                        <div class="stats-label">Utilisateurs</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stats-value" id="total-orders">-</div>
+                        <div class="stats-label">Commandes</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stats-value" id="total-products">-</div>
+                        <div class="stats-label">Produits</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stats-value" id="monthly-revenue">-</div>
+                        <div class="stats-label">Revenus du mois</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Chart -->
+                <div class="col-lg-8 mb-4">
+                    <div class="stats-card">
+                        <h5 class="mb-4">Ventes Mensuelles</h5>
+                        <div class="chart-container">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="col-lg-4 mb-4">
+                    <div class="stats-card">
+                        <h5 class="mb-4">Commandes Récentes</h5>
+                        <div id="recent-orders">
+                            <!-- Recent orders will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Page -->
+        <div id="orders-page" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestion des Commandes</h2>
+                <div class="d-flex gap-2">
+                    <select class="form-select" id="status-filter" style="width: auto;">
+                        <option value="">Tous les statuts</option>
+                        <option value="pending">En attente</option>
+                        <option value="confirmed">Confirmée</option>
+                        <option value="processing">En cours</option>
+                        <option value="shipped">Expédiée</option>
+                        <option value="delivered">Livrée</option>
+                        <option value="cancelled">Annulée</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="orders-table">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Commande</th>
+                            <th>Client</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <!-- Orders will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav id="orders-pagination" class="mt-4" style="display: none;">
+                <ul class="pagination justify-content-center">
+                    <!-- Pagination will be loaded here -->
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Products Page -->
+        <div id="products-page" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestion des Produits</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal">
+                    <i class="fas fa-plus me-2"></i>Ajouter un Produit
+                </button>
+            </div>
+
+            <div class="row g-4" id="products-grid">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Users Page -->
+        <div id="users-page" style="display: none;">
+            <h2 class="mb-4">Gestion des Utilisateurs</h2>
+            <div class="stats-card">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Entreprise</th>
+                            <th>Date d'inscription</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics-page" style="display: none;">
+            <h2 class="mb-4">Analytics & Statistiques</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="stats-card">
+                        <h5 class="mb-4">Top Produits</h5>
+                        <canvas id="productsChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="stats-card">
+                        <h5 class="mb-4">Statuts des Commandes</h5>
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loading">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un Produit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="product-form">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nom du produit *</label>
+                                <input type="text" class="form-control" id="product-name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prix *</label>
+                                <input type="number" class="form-control" id="product-price" step="0.01" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Catégorie</label>
+                                <select class="form-select" id="product-category">
+                                    <option value="print">Impression</option>
+                                    <option value="supplies">Fournitures</option>
+                                    <option value="usb">Clés USB</option>
+                                    <option value="other">Autre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Stock</label>
+                                <input type="number" class="form-control" id="product-stock" value="0">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="product-description" rows="3"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">URL de l'image</label>
+                                <input type="url" class="form-control" id="product-image">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProduct()">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:5001/api';
+        let currentUser = null;
+        let currentToken = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('admin_token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentToken = token;
+            verifyAuth();
+
+            // Set current date
+            document.getElementById('current-date').textContent =
+                new Date().toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+            // Load dashboard by default
+            loadDashboard();
+
+            // Navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    showPage(page);
+
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+
+        // Authentication functions
+        async function verifyAuth() {
+            try {
+                // Skip auth verification for demo purposes
+                console.log('Auth verification skipped for demo');
+                document.getElementById('admin-name').textContent = 'Administrateur Demo';
+                return true;
+            } catch (error) {
+                console.error('Auth verification error:', error);
+                logout();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_token');
+            window.location.href = 'index.html';
+        }
+
+        // Page management
+        function showPage(page) {
+            // Hide all pages
+            document.querySelectorAll('[id$="-page"]').forEach(p => {
+                p.style.display = 'none';
+            });
+
+            // Show selected page
+            document.getElementById(`${page}-page`).style.display = 'block';
+
+            // Load page data
+            switch(page) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'orders':
+                    loadOrders();
+                    break;
+                case 'products':
+                    loadProducts();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+            }
+        }
+
+        // Dashboard functions
+        async function loadDashboard() {
+            showLoading();
+
+            try {
+                // Use demo data instead of API call
+                const data = {
+                    stats: {
+                        total_users: 156,
+                        total_orders: 89,
+                        total_products: 12,
+                        monthly_revenue: 1250000
+                    },
+                    recent_orders: [
+                        {
+                            order_number: 'PP202501011201',
+                            total_amount: 45000,
+                            status: 'pending',
+                            created_at: new Date().toISOString()
+                        },
+                        {
+                            order_number: 'PP202501011158',
+                            total_amount: 32000,
+                            status: 'confirmed',
+                            created_at: new Date().toISOString()
+                        }
+                    ],
+                    monthly_sales: [
+                        {month: '2024-12', revenue: 850000},
+                        {month: '2025-01', revenue: 1250000}
+                    ]
+                };
+
+                // Update stats
+                document.getElementById('total-users').textContent = data.stats.total_users;
+                document.getElementById('total-orders').textContent = data.stats.total_orders;
+                document.getElementById('total-products').textContent = data.stats.total_products;
+                document.getElementById('monthly-revenue').textContent =
+                    new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: 'XOF'
+                    }).format(data.stats.monthly_revenue);
+
+                // Load recent orders
+                loadRecentOrders(data.recent_orders);
+
+                // Load chart
+                loadSalesChart(data.monthly_sales);
+
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                showError('Erreur lors du chargement du dashboard');
+            }
+
+            hideLoading();
+        }
+
+        function loadRecentOrders(orders) {
+            const container = document.getElementById('recent-orders');
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<p class="text-muted mb-0">Aucune commande récente</p>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="fw-bold">${order.order_number}</div>
+                        <small class="text-muted">${new Date(order.created_at).toLocaleDateString('fr-FR')}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">${formatPrice(order.total_amount)}</div>
+                        <span class="badge status-${order.status}">${getStatusLabel(order.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadSalesChart(monthlySales) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (window.salesChart) {
+                window.salesChart.destroy();
+            }
+
+            // Default data if no sales data
+            if (!monthlySales || monthlySales.length === 0) {
+                monthlySales = Array.from({length: 12}, (_, i) => ({
+                    month: new Date(Date.now() - i * 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 7),
+                    revenue: Math.floor(Math.random() * 500000) + 100000
+                })).reverse();
+            }
+
+            window.salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlySales.map(sale => {
+                        const date = new Date(sale.month + '-01');
+                        return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+                    }),
+                    datasets: [{
+                        label: 'Ventes (FCFA)',
+                        data: monthlySales.map(sale => sale.revenue),
+                        borderColor: '#FF6B35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatPrice(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Orders functions
+        async function loadOrders(page = 1) {
+            showLoading();
+
+            try {
+                // Use demo data instead of API call
+                const demoOrders = [
+                    {
+                        order_number: 'PP202501011201',
+                        customer_id: 1,
+                        total_amount: 45000,
+                        status: 'pending',
+                        created_at: new Date().toISOString(),
+                        items: [{name: 'Banderole Publicitaire', quantity: 2}]
+                    },
+                    {
+                        order_number: 'PP202501011158',
+                        customer_id: 2,
+                        total_amount: 32000,
+                        status: 'confirmed',
+                        created_at: new Date().toISOString(),
+                        items: [{name: 'Stickers Personnalisés', quantity: 1}]
+                    }
+                ];
+
+                renderOrdersTable(demoOrders);
+                renderPagination({page: 1, pages: 1, total: 2}, 'orders', loadOrders);
+
+            } catch (error) {
+                console.error('Orders load error:', error);
+                showError('Erreur lors du chargement des commandes');
+            }
+
+            hideLoading();
+        }
+
+        function renderOrdersTable(orders) {
+            const tbody = document.getElementById('orders-table-body');
+
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Aucune commande trouvée</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${order.order_number}</div>
+                        <small class="text-muted">${order.items.length} produit(s)</small>
+                    </td>
+                    <td>
+                        <div>${order.customer_id ? 'Client #' + order.customer_id : 'Anonyme'}</div>
+                        <small class="text-muted">${order.shipping_email || 'N/A'}</small>
+                    </td>
+                    <td class="fw-bold">${formatPrice(order.total_amount)}</td>
+                    <td>
+                        <span class="status-badge status-${order.status}">${getStatusLabel(order.status)}</span>
+                    </td>
+                    <td>${new Date(order.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="viewOrder('${order.order_number}')" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="editOrder('${order.order_number}')" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        function showError(message) {
+            // Simple error display - you could enhance this
+            alert(message);
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'XOF',
+                minimumFractionDigits: 0
+            }).format(price);
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': 'En attente',
+                'confirmed': 'Confirmée',
+                'processing': 'En cours',
+                'shipped': 'Expédiée',
+                'delivered': 'Livrée',
+                'cancelled': 'Annulée'
+            };
+            return labels[status] || status;
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        function renderPagination(pagination, pageType, loadFunction) {
+            const container = document.getElementById(`${pageType}-pagination`);
+            const ul = container.querySelector('ul');
+
+            if (pagination.pages <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+
+            let paginationHtml = '';
+
+            // Previous button
+            if (pagination.page > 1) {
+                paginationHtml += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="${loadFunction.name}(${pagination.page - 1})">Précédent</a>
+                </li>`;
+            }
+
+            // Page numbers
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page) {
+                    paginationHtml += `<li class="page-item active">
+                        <span class="page-link">${i}</span>
+                    </li>`;
+                } else {
+                    paginationHtml += `<li class="page-item">
+                        <a class="page-link" href="#" onclick="${loadFunction.name}(${i})">${i}</a>
+                    </li>`;
+                }
+            }
+
+            // Next button
+            if (pagination.page < pagination.pages) {
+                paginationHtml += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="${loadFunction.name}(${pagination.page + 1})">Suivant</a>
+                </li>`;
+            }
+
+            ul.innerHTML = paginationHtml;
+        }
+
+        // Status filter for orders
+        document.getElementById('status-filter').addEventListener('change', function() {
+            loadOrders(1);
+        });
+
+        // Placeholder functions for other pages
+        async function loadProducts() {
+            // Demo products data
+            const demoProducts = [
+                {id: 1, name: 'Banderole Publicitaire', price: 25000, category: 'print', stock: 15},
+                {id: 2, name: 'Stickers Personnalisés', price: 15000, category: 'print', stock: 8},
+                {id: 3, name: 'Clé USB 32GB', price: 8500, category: 'usb', stock: 25}
+            ];
+
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = demoProducts.map(product => `
+                <div class="col-lg-4 col-md-6">
+                    <div class="stats-card">
+                        <h5>${product.name}</h5>
+                        <p class="mb-2">${formatPrice(product.price)}</p>
+                        <p class="mb-2">Stock: ${product.stock}</p>
+                        <p class="mb-3">Catégorie: ${product.category}</p>
+                        <button class="btn btn-primary btn-sm">Modifier</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadUsers() {
+            // Demo users data
+            const demoUsers = [
+                {
+                    id: 1,
+                    first_name: 'Admin',
+                    last_name: 'PassPrint',
+                    email: 'admin@passprint.com',
+                    phone: '696465609',
+                    company: 'PassPrint',
+                    created_at: new Date().toISOString()
+                }
+            ];
+
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = demoUsers.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.first_name} ${user.last_name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.phone}</td>
+                    <td>${user.company}</td>
+                    <td>${new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadAnalytics() {
+            // Demo analytics data - charts would be loaded here
+            console.log('Analytics page loaded with demo data');
+        }
+
+        function saveProduct() {
+            // Implementation for saving products
+            const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+            modal.hide();
+        }
+
+        function viewOrder(orderNumber) {
+            // Implementation for viewing order details
+            console.log('View order:', orderNumber);
+        }
+
+        function editOrder(orderNumber) {
+            // Implementation for editing order
+            console.log('Edit order:', orderNumber);
+        }
+    </script>
+</body>
+</html>
