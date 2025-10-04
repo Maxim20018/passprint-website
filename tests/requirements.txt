@@ -1,0 +1,51 @@
+# Dépendances de test pour PassPrint
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-django==4.6.0
+pytest-flask==1.3.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0
+pytest-benchmark==4.0.0
+pytest-timeout==2.2.0
+pytest-html==4.1.1
+pytest-metadata==3.0.0
+
+# Mock et simulation
+responses==0.24.1
+freezegun==1.2.2
+factory-boy==3.3.0
+faker==20.1.0
+
+# Tests d'intégration
+requests==2.31.0
+httpx==0.25.2
+
+# Tests de performance
+locust==2.20.1
+
+# Tests de sécurité
+safety==2.4.0
+bandit==1.7.5
+
+# Couverture de code
+coverage[toml]==7.3.2
+
+# Tests de base de données
+pytest-mysql==2.1.0
+pytest-postgresql==5.0.0
+
+# Tests API
+pytest-apispec==0.1.0
+schemathesis==3.20.1
+
+# Tests de mutation
+mutagen==1.46.0
+
+# Outils de développement
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Environnement virtuel
+pip-tools==7.3.0

@@ -21,7 +21,7 @@ document.querySelectorAll('.services .col-md-4, .product, .portfolio img').forEa
 // Cart functionality restored and enhanced
 let cart = [];
 let cartTotal = 0;
-const API_BASE = 'http://localhost:5001/api';
+const API_BASE = 'http://localhost:5000/api';
 
 // Initialize cart from localStorage or API
 async function initCart() {
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addCartButtonsToProducts();
 
     // Stripe payment
-    const stripe = Stripe('pk_test_...'); // Replace with your test publishable key
+    // const stripe = Stripe('pk_test_your_publishable_key_here'); // Replace with your actual test publishable key
     const elements = stripe.elements();
     const cardElement = elements.create('card');
     const cardErrors = document.getElementById('card-errors');

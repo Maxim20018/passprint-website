@@ -259,3 +259,77 @@ class NewsletterSubscriber(db.Model):
             'is_active': self.is_active,
             'source': self.source
         }
+
+class AuditLog(db.Model):
+    """Modèle logs d'audit"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    action = db.Column(db.String(100), nullable=False)
+    details = db.Column(db.Text, nullable=False)
+    ip_address = db.Column(db.String(45))  # Support IPv6
+    user_agent = db.Column(db.String(500))
+    resource_type = db.Column(db.String(50))  # user, order, product, etc.
+    resource_id = db.Column(db.String(100))  # ID of the affected resource
+    status = db.Column(db.String(20), default='success')  # success, failure, warning
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relations
+    user = db.relationship('User', backref='audit_logs')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'action': self.action,
+            'details': self.details,
+            'ip_address': self.ip_address,
+            'user_agent': self.user_agent,
+            'resource_type': self.resource_type,
+            'resource_id': self.resource_id,
+            'status': self.status,
+            'created_at': self.created_at.isoformat()
+        }
+
+class SystemConfig(db.Model):
+    """Modèle configuration système"""
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text, nullable=False)
+    description = db.Column(db.String(255))
+    data_type = db.Column(db.String(20), default='string')  # string, int, float, bool, json
+    is_sensitive = db.Column(db.Boolean, default=False)  # Pour les mots de passe/clés API
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'key': self.key,
+            'value': '***HIDDEN***' if self.is_sensitive else self.value,
+            'description': self.description,
+            'data_type': self.data_type,
+            'is_sensitive': self.is_sensitive,
+            'updated_at': self.updated_at.isoformat()
+        }
+
+class BackupLog(db.Model):
+    """Modèle logs de sauvegarde"""
+    id = db.Column(db.Integer, primary_key=True)
+    backup_type = db.Column(db.String(50), nullable=False)  # full, incremental, database, files
+    file_path = db.Column(db.String(500))
+    file_size = db.Column(db.BigInteger)  # Taille en octets
+    status = db.Column(db.String(20), default='pending')  # pending, success, failed
+    error_message = db.Column(db.Text)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'backup_type': self.backup_type,
+            'file_path': self.file_path,
+            'file_size': self.file_size,
+            'status': self.status,
+            'error_message': self.error_message,
+            'started_at': self.started_at.isoformat(),
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None
+        }

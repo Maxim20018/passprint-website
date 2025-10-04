@@ -41,6 +41,11 @@ def health():
         'version': '1.0.0'
     })
 
+@app.route('/favicon.ico')
+def favicon():
+    """Servir le favicon"""
+    return send_from_directory('.', 'favicon.ico')
+
 @app.route('/api/dashboard')
 def dashboard_data():
     """Données du dashboard"""
@@ -67,13 +72,13 @@ def serve_file(filename):
     return send_from_directory('.', filename)
 
 if __name__ == '__main__':
-    print("🚀 Serveur PassPrint - Version Fonctionnelle")
+    print("Serveur PassPrint - Version Fonctionnelle")
     print("=" * 50)
-    print("✅ Site Web: http://localhost:5000")
-    print("✅ Dashboard: http://localhost:5000/dashboard.html")
-    print("✅ Admin: http://localhost:5000/admin.html")
-    print("✅ API: http://localhost:5000/api/health")
+    print("Site Web: http://localhost:5000")
+    print("Dashboard: http://localhost:5000/dashboard.html")
+    print("Admin: http://localhost:5000/admin.html")
+    print("API: http://localhost:5000/api/health")
     print("=" * 50)
-    print("🎯 Le serveur est maintenant actif et fonctionnel!")
+    print("Le serveur est maintenant actif et fonctionnel!")
 
     app.run(host='0.0.0.0', port=5000, debug=True)
