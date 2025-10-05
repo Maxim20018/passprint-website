@@ -547,7 +547,7 @@ def login():
         app.logger.error(f"Erreur connexion utilisateur: {e}")
         return jsonify({'error': 'Erreur interne du serveur'}), 500
 
-@app.route('/api/auth/verify', methods=['POST'])
+@app.route('/api/auth/verify', methods=['GET', 'POST'])
 @token_required
 def verify_token_endpoint(user_id):
     """Vérifier la validité d'un token"""
@@ -1526,9 +1526,54 @@ def not_found(error):
 def internal_error(error):
     return jsonify({'error': 'Erreur interne du serveur'}), 500
 
+def create_default_admin():
+    """Créer un administrateur par défaut si aucun n'existe"""
+    try:
+        # Vérifier si un admin existe déjà
+        admin_exists = User.query.filter_by(is_admin=True).first()
+        if admin_exists:
+            print("Administrateur deja existant")
+            return
+
+        # Créer l'admin par défaut
+        default_admin = User(
+            email='admin@passprint.com',
+            password_hash=generate_password_hash('admin123'),
+            first_name='Admin',
+            last_name='PassPrint',
+            phone='+2250102030405',
+            company='PassPrint',
+            is_admin=True
+        )
+
+        db.session.add(default_admin)
+        db.session.commit()
+
+        print("=== COMPTE ADMINISTRATEUR PAR DEFAUT ===")
+        print("Email: admin@passprint.com")
+        print("Mot de passe: admin123")
+        print("")
+        print("INSTRUCTIONS IMPORTANTES:")
+        print("1. Connectez-vous avec ces identifiants")
+        print("2. Changez immediatement le mot de passe")
+        print("3. Creez des comptes admin supplementaires")
+        print("4. Supprimez ce compte de demonstration")
+        print("")
+        print("SECURITE PRODUCTION:")
+        print("- Utilisez HTTPS en production")
+        print("- Configurez des mots de passe forts")
+        print("- Activez l'authentification a deux facteurs")
+        print("- Surveillez les logs de connexion")
+        print("=======================================")
+
+    except Exception as e:
+        print(f"Erreur creation admin par defaut: {e}")
+        db.session.rollback()
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Créer les tables si elles n'existent pas
+        create_default_admin()  # Créer l'admin par défaut
 
     app.run(
         host=app.config['HOST'],

@@ -283,8 +283,124 @@ ADMIN_DASHBOARD_TEMPLATE = """
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                <h5 class="modal-title" style="color: #2D1B69; font-weight: 600;">
+                    <i class="fas fa-sign-in-alt me-2"></i>Connexion Admin
+                </h5>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label" style="color: #2D1B69; font-weight: 500;">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" required style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);">
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label" style="color: #2D1B69; font-weight: 500;">Mot de passe</label>
+                        <input type="password" class="form-control" id="loginPassword" required style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe" style="color: #666;">Se souvenir de moi</label>
+                    </div>
+                    <div id="loginError" class="alert alert-danger" style="display: none; border-radius: 10px;"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(0,0,0,0.1);">
+                <button type="button" class="btn btn-outline-primary" onclick="showSignupModal()" style="border-radius: 25px;">Créer un compte</button>
+                <button type="button" class="btn btn-primary" onclick="login()" style="border-radius: 25px; background: linear-gradient(135deg, #2D1B69 0%, #FF6B35 100%); border: none;">Se connecter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Signup Modal -->
+<div class="modal fade" id="signupModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                <h5 class="modal-title" style="color: #2D1B69; font-weight: 600;">
+                    <i class="fas fa-user-plus me-2"></i>Créer un compte Admin
+                </h5>
+                <button type="button" class="btn-close" onclick="showLoginModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form id="signupForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="signupFirstName" class="form-label" style="color: #2D1B69; font-weight: 500;">Prénom</label>
+                                <input type="text" class="form-control" id="signupFirstName" required style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="signupLastName" class="form-label" style="color: #2D1B69; font-weight: 500;">Nom</label>
+                                <input type="text" class="form-control" id="signupLastName" required style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupEmail" class="form-label" style="color: #2D1B69; font-weight: 500;">Email</label>
+                        <input type="email" class="form-control" id="signupEmail" required style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="signupPassword" class="form-label" style="color: #2D1B69; font-weight: 500;">Mot de passe</label>
+                                <input type="password" class="form-control" id="signupPassword" required style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);" minlength="8">
+                                <div class="form-text" style="font-size: 0.8rem; color: #666;">Minimum 8 caractères</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="signupConfirmPassword" class="form-label" style="color: #2D1B69; font-weight: 500;">Confirmer le mot de passe</label>
+                                <input type="password" class="form-control" id="signupConfirmPassword" required style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);" minlength="8">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupPhone" class="form-label" style="color: #2D1B69; font-weight: 500;">Téléphone</label>
+                        <input type="tel" class="form-control" id="signupPhone" style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);">
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupCompany" class="form-label" style="color: #2D1B69; font-weight: 500;">Entreprise (optionnel)</label>
+                        <input type="text" class="form-control" id="signupCompany" style="border-radius: 10px; border: 1px solid rgba(45, 27, 105, 0.2);">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="acceptTerms" required>
+                        <label class="form-check-label" for="acceptTerms" style="color: #666; font-size: 0.9rem;">
+                            J'accepte les <a href="#" style="color: #FF6B35;">conditions d'utilisation</a> et la <a href="#" style="color: #FF6B35;">politique de confidentialité</a>
+                        </label>
+                    </div>
+                    <div id="signupError" class="alert alert-danger" style="display: none; border-radius: 10px;"></div>
+                    <div id="signupSuccess" class="alert alert-success" style="display: none; border-radius: 10px;"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(0,0,0,0.1);">
+                <button type="button" class="btn btn-outline-secondary" onclick="showLoginModal()" style="border-radius: 25px;">Retour à la connexion</button>
+                <button type="button" class="btn btn-success" onclick="signup()" style="border-radius: 25px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none;">Créer le compte</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auth Overlay -->
+<div id="authOverlay" class="position-fixed top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 9998; display: flex; align-items: center; justify-content: center;">
+    <div class="text-center text-white">
+        <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+        <h3>Vérification de l'authentification...</h3>
+        <p>Redirection vers le panneau d'administration</p>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h3 style="color: #FFD700; margin: 0;">PassPrint Admin</h3>
             <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Panneau de Contrôle</p>
@@ -327,10 +443,10 @@ ADMIN_DASHBOARD_TEMPLATE = """
                             <i class="fas fa-user"></i> Admin
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user"></i> Profil</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Paramètres</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showProfile()"><i class="fas fa-user"></i> Profil</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showSettings()"><i class="fas fa-cog"></i> Paramètres</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
                         </ul>
                     </div>
                 </div>
@@ -864,15 +980,227 @@ ADMIN_DASHBOARD_TEMPLATE = """
         let currentPage = 'overview';
         let charts = {};
         let refreshTimer;
+        let isAuthenticated = false;
+        let currentUser = null;
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
-            initializeDashboard();
-            setupEventListeners();
-            loadDashboardData();
+            checkAuthentication();
+        });
 
-            // Démarrer le rafraîchissement automatique
-            startAutoRefresh();
+        // Fonctions d'authentification
+        async function checkAuthentication() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    showLoginModal();
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/auth/verify`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user && data.user.is_admin) {
+                        isAuthenticated = true;
+                        currentUser = data.user;
+                        hideAuthOverlay();
+                        initializeDashboard();
+                        setupEventListeners();
+                        loadDashboardData();
+                        startAutoRefresh();
+                        updateUserInfo();
+                    } else {
+                        showLoginModal();
+                    }
+                } else {
+                    localStorage.removeItem('admin_token');
+                    showLoginModal();
+                }
+            } catch (error) {
+                console.error('Erreur vérification auth:', error);
+                showLoginModal();
+            }
+        }
+
+        function showLoginModal() {
+            document.getElementById('authOverlay').style.display = 'none';
+            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            loginModal.show();
+        }
+
+        function showSignupModal() {
+            bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+            const signupModal = new bootstrap.Modal(document.getElementById('signupModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            signupModal.show();
+        }
+
+        function hideAuthOverlay() {
+            document.getElementById('authOverlay').style.display = 'none';
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            if (!email || !password) {
+                showLoginError('Veuillez remplir tous les champs');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.user && data.user.is_admin) {
+                    localStorage.setItem('admin_token', data.token);
+                    isAuthenticated = true;
+                    currentUser = data.user;
+
+                    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+                    hideAuthOverlay();
+                    initializeDashboard();
+                    setupEventListeners();
+                    loadDashboardData();
+                    startAutoRefresh();
+                    updateUserInfo();
+
+                    showAlert('Connexion réussie!', 'success');
+                } else {
+                    showLoginError(data.error || 'Email ou mot de passe incorrect');
+                }
+            } catch (error) {
+                showLoginError('Erreur de connexion réseau');
+            }
+        }
+
+        async function signup() {
+            const firstName = document.getElementById('signupFirstName').value;
+            const lastName = document.getElementById('signupLastName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const phone = document.getElementById('signupPhone').value;
+            const company = document.getElementById('signupCompany').value;
+            const acceptTerms = document.getElementById('acceptTerms').checked;
+
+            // Validation
+            if (!firstName || !lastName || !email || !password) {
+                showSignupError('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showSignupError('Les mots de passe ne correspondent pas');
+                return;
+            }
+
+            if (password.length < 8) {
+                showSignupError('Le mot de passe doit contenir au moins 8 caractères');
+                return;
+            }
+
+            if (!acceptTerms) {
+                showSignupError('Veuillez accepter les conditions d\'utilisation');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        first_name: firstName,
+                        last_name: lastName,
+                        email,
+                        password,
+                        phone,
+                        company
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSignupSuccess('Compte créé avec succès! Vous pouvez maintenant vous connecter.');
+                    setTimeout(() => {
+                        showLoginModal();
+                    }, 2000);
+                } else {
+                    showSignupError(data.error || 'Erreur lors de la création du compte');
+                }
+            } catch (error) {
+                showSignupError('Erreur de connexion réseau');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSignupError(message) {
+            const errorDiv = document.getElementById('signupError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('signupSuccess').style.display = 'none';
+        }
+
+        function showSignupSuccess(message) {
+            const successDiv = document.getElementById('signupSuccess');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('signupError').style.display = 'none';
+        }
+
+        function updateUserInfo() {
+            if (currentUser) {
+                const userName = `${currentUser.first_name} ${currentUser.last_name}`;
+                document.querySelector('.dropdown-toggle .fa-user').nextSibling.textContent = userName;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_token');
+            isAuthenticated = false;
+            currentUser = null;
+            location.reload();
+        }
+
+        // Gestionnaire d'événements pour les formulaires
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const activeModal = document.querySelector('.modal.show');
+                if (activeModal) {
+                    const modalId = activeModal.id;
+                    if (modalId === 'loginModal') {
+                        login();
+                    } else if (modalId === 'signupModal') {
+                        signup();
+                    }
+                }
+            }
         });
 
         function initializeDashboard() {
@@ -1565,6 +1893,14 @@ ADMIN_DASHBOARD_TEMPLATE = """
             if (confirm('Êtes-vous sûr de vouloir activer la maintenance d\'urgence?')) {
                 showAlert('Maintenance d\'urgence activée', 'danger');
             }
+        }
+
+        function showProfile() {
+            showAlert('Fonctionnalité de profil à venir', 'info');
+        }
+
+        function showSettings() {
+            showAlert('Fonctionnalité de paramètres à venir', 'info');
         }
 
         // Cleanup on page unload
