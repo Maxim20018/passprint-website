@@ -201,6 +201,7 @@ def setup_logging(app=None):
             config['root']['level'] = 'DEBUG'
 
     # Appliquer la configuration
+    import logging.config
     logging.config.dictConfig(config)
 
     # Créer les loggers principaux

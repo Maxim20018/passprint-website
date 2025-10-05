@@ -27,11 +27,49 @@ from config import get_config
 from models import db, User, Product, Order, OrderItem, Quote, Cart, File, NewsletterSubscriber, AuditLog
 from pricing_engine import pricing_engine, calculate_product_price
 from promo_engine import promo_engine, validate_and_apply_promo_code, create_new_promo_code
-from logging_config import setup_logging, log_api_request, log_security_event, PerformanceLogger
-from security_system import security_system, require_auth, rate_limit, validate_password_strength, sanitize_input
-from api_docs import register_api_docs
-from monitoring_alerting import init_monitoring, get_monitoring_dashboard
-from monitoring_config import init_monitoring_integration, get_monitoring_integration
+
+# Import avec gestion d'erreurs pour les modules optionnels
+try:
+    from logging_config import setup_logging, log_api_request, log_security_event, PerformanceLogger
+    logging_available = True
+except ImportError:
+    logging_available = False
+    print("Warning: Module logging_config non disponible - utilisation du logging basique")
+
+try:
+    from security_system import security_system, require_auth, rate_limit, validate_password_strength, sanitize_input
+    security_available = True
+except ImportError:
+    security_available = False
+    print("Warning: Module security_system non disponible - utilisation de la securite basique")
+
+try:
+    from api_docs import register_api_docs
+    api_docs_available = True
+except ImportError:
+    api_docs_available = False
+    print("Warning: Module api_docs non disponible - API documentation desactivee")
+
+try:
+    from monitoring_alerting import init_monitoring, get_monitoring_dashboard
+    monitoring_available = True
+except ImportError:
+    monitoring_available = False
+    print("Warning: Module monitoring_alerting non disponible - monitoring desactive")
+
+try:
+    from monitoring_config import init_monitoring_integration, get_monitoring_integration
+    monitoring_integration_available = True
+except ImportError:
+    monitoring_integration_available = False
+    print("Warning: Module monitoring_config non disponible - integrations monitoring desactivees")
+
+try:
+    from admin_dashboard_professional import register_admin_dashboard
+    admin_dashboard_available = True
+except ImportError:
+    admin_dashboard_available = False
+    print("Warning: Module admin_dashboard_professional non disponible - dashboard admin basique")
 
 def create_app():
     """Création de l'application Flask"""
@@ -79,8 +117,13 @@ def create_app():
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('SMTP_USERNAME', 'noreply@passprint.com')
 
     # Configuration du logging
-    logger, security_logger = setup_logging(app)
-    app.logger = logger
+    if logging_available:
+        logger, security_logger = setup_logging(app)
+        app.logger = logger
+    else:
+        # Logging basique
+        logging.basicConfig(level=logging.INFO)
+        app.logger = logging.getLogger(__name__)
 
     # Créer les dossiers nécessaires
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -88,17 +131,24 @@ def create_app():
     os.makedirs('backups', exist_ok=True)
 
     # Initialiser le système de sécurité
-    security_system.app = app
+    if security_available:
+        security_system.app = app
 
     # Enregistrer la documentation API
-    register_api_docs(app)
+    if api_docs_available:
+        register_api_docs(app)
 
     # Initialiser le système de monitoring si activé
-    if app.config.get('MONITORING_CONFIG', {}).get('enabled', False):
+    if monitoring_available and app.config.get('MONITORING_CONFIG', {}).get('enabled', False):
         init_monitoring(app)
 
     # Initialiser les intégrations de monitoring
-    init_monitoring_integration(app)
+    if monitoring_integration_available:
+        init_monitoring_integration(app)
+
+    # Enregistrer le dashboard admin professionnel
+    if admin_dashboard_available:
+        register_admin_dashboard(app)
 
     return app
 
@@ -359,11 +409,36 @@ def health_check():
         'version': '1.0.0'
     })
 
+@app.route('/')
+def index():
+    """Page d'accueil principale"""
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Servir les fichiers statiques"""
+    return send_from_directory('.', path)
+
 @app.route('/admin/monitoring')
-@admin_required
-def monitoring_dashboard(user_id):
+def monitoring_dashboard():
     """Dashboard de monitoring"""
     return send_from_directory('.', 'monitoring_dashboard.html')
+
+@app.route('/dashboard')
+def dashboard():
+    """Dashboard principal"""
+    return send_from_directory('.', 'dashboard.html')
+
+@app.route('/admin')
+def admin():
+    """Dashboard admin professionnel"""
+    if admin_dashboard_available:
+        # Importer le template depuis le module admin_dashboard_professional
+        from admin_dashboard_professional import ADMIN_DASHBOARD_TEMPLATE
+        return ADMIN_DASHBOARD_TEMPLATE
+    else:
+        # Fallback vers le dashboard basique
+        return send_from_directory('.', 'admin.html')
 
 def get_config():
     """Configuration publique pour le frontend"""
@@ -374,233 +449,103 @@ def get_config():
 
 # Routes d'authentification
 @app.route('/api/auth/register', methods=['POST'])
-@rate_limit(limit=5, window=300)  # 5 tentatives par 5 minutes
 def register():
     """Inscription utilisateur"""
-    with PerformanceLogger('user_registration'):
-        try:
-            # Obtenir les informations client
-            ip_address = security_system.get_client_ip()
-            user_agent = request.headers.get('User-Agent')
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Données manquantes'}), 400
 
-            data = request.get_json()
-            if not data:
-                log_security_event(
-                    action='registration_attempt',
-                    details='Données manquantes',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({'error': 'Données manquantes'}), 400
+        # Validation basique des données
+        if not data.get('email') or not data.get('password'):
+            return jsonify({'error': 'Email et mot de passe requis'}), 400
 
-            # Nettoyer et valider les données
-            data = sanitize_input(data)
+        # Validation email basique
+        import re
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', data['email']):
+            return jsonify({'error': 'Email invalide'}), 400
 
-            # Validation des données
-            if not data.get('email') or not data.get('password'):
-                log_security_event(
-                    action='registration_attempt',
-                    details='Email ou mot de passe manquant',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({'error': 'Email et mot de passe requis'}), 400
+        # Validation mot de passe basique
+        if len(data['password']) < 8:
+            return jsonify({'error': 'Le mot de passe doit contenir au moins 8 caractères'}), 400
 
-            # Validation email
-            if not security_system.validate_email_format(data['email']):
-                log_security_event(
-                    action='registration_attempt',
-                    details=f'Format email invalide: {data["email"]}',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({'error': 'Email invalide'}), 400
+        email = data['email'].lower().strip()
 
-            # Validation mot de passe renforcée
-            password_validation = validate_password_strength(data['password'])
-            if not password_validation['valid']:
-                log_security_event(
-                    action='registration_attempt',
-                    details=f'Mot de passe faible: {", ".join(password_validation["errors"])}',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({
-                    'error': 'Mot de passe trop faible',
-                    'requirements': password_validation['errors']
-                }), 400
+        # Vérifier si l'utilisateur existe déjà
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return jsonify({'error': 'Email déjà utilisé'}), 409
 
-            email = data['email'].lower().strip()
+        # Créer nouvel utilisateur
+        new_user = User(
+            email=email,
+            password_hash=generate_password_hash(data['password']),
+            first_name=data.get('first_name', '').strip(),
+            last_name=data.get('last_name', '').strip(),
+            phone=data.get('phone', '').strip(),
+            company=data.get('company', '').strip()
+        )
 
-            # Vérifier si l'utilisateur existe déjà
-            existing_user = User.query.filter_by(email=email).first()
-            if existing_user:
-                log_security_event(
-                    action='registration_attempt',
-                    details=f'Email déjà utilisé: {email}',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({'error': 'Email déjà utilisé'}), 409
+        db.session.add(new_user)
+        db.session.commit()
 
-            # Créer nouvel utilisateur
-            new_user = User(
-                email=email,
-                password_hash=generate_password_hash(data['password']),
-                first_name=data.get('first_name', '').strip(),
-                last_name=data.get('last_name', '').strip(),
-                phone=data.get('phone', '').strip(),
-                company=data.get('company', '').strip()
-            )
+        # Générer token JWT
+        token = generate_token(new_user.id)
 
-            db.session.add(new_user)
-            db.session.commit()
+        # Envoyer email de bienvenue de manière asynchrone
+        if new_user.email:
+            try:
+                send_welcome_email(new_user.email, f"{new_user.first_name} {new_user.last_name}")
+            except Exception as e:
+                app.logger.warning(f"Erreur envoi email bienvenue: {e}")
 
-            # Logger l'événement de sécurité
-            log_security_event(
-                user_id=str(new_user.id),
-                action='user_registered',
-                details=f'Nouvel utilisateur créé: {email}',
-                ip_address=ip_address,
-                user_agent=user_agent,
-                status='success'
-            )
+        return jsonify({
+            'message': 'Utilisateur créé avec succès',
+            'user': new_user.to_dict(),
+            'token': token
+        }), 201
 
-            # Générer token JWT
-            token = generate_token(new_user.id)
-
-            # Envoyer email de bienvenue de manière asynchrone
-            if new_user.email:
-                try:
-                    send_welcome_email(new_user.email, f"{new_user.first_name} {new_user.last_name}")
-                except Exception as e:
-                    app.logger.warning(f"Erreur envoi email bienvenue: {e}")
-
-            # Logger la requête API
-            log_api_request('/api/auth/register', 'POST', 201, user_id=str(new_user.id), ip_address=ip_address)
-
-            return jsonify({
-                'message': 'Utilisateur créé avec succès',
-                'user': new_user.to_dict(),
-                'token': token
-            }), 201
-
-        except Exception as e:
-            app.logger.error(f"Erreur inscription utilisateur: {e}")
-            db.session.rollback()
-
-            log_security_event(
-                action='registration_error',
-                details=f'Erreur serveur: {str(e)}',
-                ip_address=security_system.get_client_ip(),
-                status='failure'
-            )
-
-            return jsonify({'error': 'Erreur interne du serveur'}), 500
+    except Exception as e:
+        app.logger.error(f"Erreur inscription utilisateur: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Erreur interne du serveur'}), 500
 
 @app.route('/api/auth/login', methods=['POST'])
-@rate_limit(limit=5, window=300)  # 5 tentatives par 5 minutes
 def login():
     """Connexion utilisateur"""
-    with PerformanceLogger('user_login'):
-        try:
-            # Obtenir les informations client
-            ip_address = security_system.get_client_ip()
-            user_agent = request.headers.get('User-Agent')
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Données manquantes'}), 400
 
-            data = request.get_json()
-            if not data:
-                log_security_event(
-                    action='login_attempt',
-                    details='Données manquantes',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({'error': 'Données manquantes'}), 400
+        # Validation basique des données
+        if not data.get('email') or not data.get('password'):
+            return jsonify({'error': 'Email et mot de passe requis'}), 400
 
-            # Nettoyer et valider les données
-            data = sanitize_input(data)
+        # Validation email basique
+        import re
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', data['email']):
+            return jsonify({'error': 'Email invalide'}), 400
 
-            if not data.get('email') or not data.get('password'):
-                log_security_event(
-                    action='login_attempt',
-                    details='Email ou mot de passe manquant',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({'error': 'Email et mot de passe requis'}), 400
+        email = data['email'].lower().strip()
 
-            # Validation email
-            if not security_system.validate_email_format(data['email']):
-                log_security_event(
-                    action='login_attempt',
-                    details=f'Format email invalide: {data["email"]}',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({'error': 'Email invalide'}), 400
+        user = User.query.filter_by(email=email).first()
 
-            email = data['email'].lower().strip()
+        if not user or not check_password_hash(user.password_hash, data['password']):
+            return jsonify({'error': 'Identifiants invalides'}), 401
 
-            # Vérifier le verrouillage du compte
-            lockout_check = security_system.check_account_lockout(email)
-            if lockout_check['locked']:
-                log_security_event(
-                    action='login_attempt_blocked',
-                    details=f'Compte verrouillé: {email}',
-                    ip_address=ip_address,
-                    status='failure'
-                )
-                return jsonify({
-                    'error': 'Compte temporairement verrouillé',
-                    'remaining_time': str(lockout_check['remaining_time']),
-                    'attempts': lockout_check['attempts']
-                }), 423  # Locked
+        # Générer token JWT
+        token = generate_token(user.id)
 
-            user = User.query.filter_by(email=email).first()
+        return jsonify({
+            'message': 'Connexion réussie',
+            'user': user.to_dict(),
+            'token': token
+        })
 
-            if not user or not check_password_hash(user.password_hash, data['password']):
-                # Enregistrer la tentative échouée
-                security_system.record_failed_login(email, ip_address)
-
-                # Vérifier si le compte doit être verrouillé
-                new_lockout_check = security_system.check_account_lockout(email)
-                if new_lockout_check['locked']:
-                    log_security_event(
-                        action='account_locked',
-                        details=f'Compte verrouillé après tentatives échouées: {email}',
-                        ip_address=ip_address,
-                        status='warning'
-                    )
-
-                return jsonify({'error': 'Identifiants invalides'}), 401
-
-            # Connexion réussie
-            security_system.record_successful_login(user.id, ip_address, user_agent)
-
-            # Générer token JWT
-            token = generate_token(user.id)
-
-            # Logger la requête API
-            log_api_request('/api/auth/login', 'POST', 200, user_id=str(user.id), ip_address=ip_address)
-
-            return jsonify({
-                'message': 'Connexion réussie',
-                'user': user.to_dict(),
-                'token': token
-            })
-
-        except Exception as e:
-            app.logger.error(f"Erreur connexion utilisateur: {e}")
-
-            log_security_event(
-                action='login_error',
-                details=f'Erreur serveur: {str(e)}',
-                ip_address=security_system.get_client_ip(),
-                status='failure'
-            )
-
-            return jsonify({'error': 'Erreur interne du serveur'}), 500
+    except Exception as e:
+        app.logger.error(f"Erreur connexion utilisateur: {e}")
+        return jsonify({'error': 'Erreur interne du serveur'}), 500
 
 @app.route('/api/auth/verify', methods=['POST'])
 @token_required

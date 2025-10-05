@@ -1,858 +1,260 @@
 #!/usr/bin/env python3
 """
-Dashboard d'Administration Ultra-Professionnel pour PassPrint
-Design et fonctionnalités de niveau entreprise avec architecture avancée
+Dashboard Admin Professionnel pour PassPrint
+Interface d'administration complète avec métriques temps réel
 """
-from flask import Flask, render_template_string, jsonify, request, send_from_directory, session
-from flask_cors import CORS
-from flask_socketio import SocketIO, emit
 import os
 import json
-import uuid
+import logging
 from datetime import datetime, timedelta
-import sqlite3
-import threading
-import time
-import random
-from werkzeug.security import generate_password_hash, check_password_hash
-import jwt
-import bcrypt
-from functools import wraps
-import requests
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
-import smtplib
-import ssl
+from collections import defaultdict
+from flask import Blueprint, render_template_string, request, jsonify, g
+from models import db, User, Product, Order, OrderItem, Quote, Cart, File, NewsletterSubscriber, AuditLog, BackupLog
+from config import get_config
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'ultra-secure-key-change-in-production-2025'
-CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Configuration du logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Configuration de la base de données
-DATABASE = 'passprint_enterprise.db'
-
-def get_db():
-    """Connexion à la base de données"""
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def init_database():
-    """Initialisation de la base de données d'entreprise"""
-    with get_db() as conn:
-        # Table des utilisateurs
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                first_name TEXT NOT NULL,
-                last_name TEXT NOT NULL,
-                role TEXT DEFAULT 'user',
-                is_active BOOLEAN DEFAULT 1,
-                last_login DATETIME,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        # Table des produits
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS products (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                description TEXT,
-                price DECIMAL(10,2) NOT NULL,
-                category TEXT NOT NULL,
-                stock_quantity INTEGER DEFAULT 0,
-                min_stock_level INTEGER DEFAULT 5,
-                image_url TEXT,
-                specifications TEXT,
-                is_active BOOLEAN DEFAULT 1,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        # Table des commandes
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS orders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                order_number TEXT UNIQUE NOT NULL,
-                customer_id INTEGER,
-                total_amount DECIMAL(10,2) NOT NULL,
-                status TEXT DEFAULT 'pending',
-                payment_status TEXT DEFAULT 'pending',
-                payment_method TEXT,
-                shipping_address TEXT,
-                billing_address TEXT,
-                notes TEXT,
-                internal_notes TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (customer_id) REFERENCES users (id)
-            )
-        ''')
-
-        # Table des éléments de commande
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS order_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                order_id INTEGER NOT NULL,
-                product_id INTEGER NOT NULL,
-                quantity INTEGER NOT NULL,
-                unit_price DECIMAL(10,2) NOT NULL,
-                total_price DECIMAL(10,2) NOT NULL,
-                specifications TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (order_id) REFERENCES orders (id),
-                FOREIGN KEY (product_id) REFERENCES products (id)
-            )
-        ''')
-
-        # Table des devis
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS quotes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                quote_number TEXT UNIQUE NOT NULL,
-                customer_id INTEGER,
-                project_name TEXT,
-                project_description TEXT,
-                specifications TEXT,
-                estimated_price DECIMAL(10,2),
-                final_price DECIMAL(10,2),
-                status TEXT DEFAULT 'draft',
-                valid_until DATETIME,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (customer_id) REFERENCES users (id)
-            )
-        ''')
-
-        # Table des fichiers
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS files (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                filename TEXT NOT NULL,
-                original_filename TEXT NOT NULL,
-                file_path TEXT NOT NULL,
-                file_size INTEGER NOT NULL,
-                file_type TEXT NOT NULL,
-                mime_type TEXT,
-                uploaded_by INTEGER,
-                related_to_type TEXT,
-                related_to_id INTEGER,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (uploaded_by) REFERENCES users (id)
-            )
-        ''')
-
-        # Table des activités
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS activities (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                action TEXT NOT NULL,
-                details TEXT,
-                ip_address TEXT,
-                user_agent TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id)
-            )
-        ''')
-
-        # Table des paramètres système
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                setting_key TEXT UNIQUE NOT NULL,
-                setting_value TEXT,
-                setting_type TEXT DEFAULT 'string',
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        conn.commit()
-
-def init_sample_data():
-    """Initialisation des données de démonstration"""
-    with get_db() as conn:
-        # Administrateur par défaut
-        admin_password = bcrypt.hashpw('admin2025!Pro'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        conn.execute('''
-            INSERT OR IGNORE INTO users (username, email, password_hash, first_name, last_name, role)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', ('admin', 'admin@passprint.com', admin_password, 'Administrateur', 'PassPrint', 'admin'))
-
-        # Produits de démonstration
-        products = [
-            ('Banderole Publicitaire Premium', 'Banderole grand format résistante aux intempéries avec finitions professionnelles', 25000.00, 'print', 15, 5, 'images/banderole.jpg', '{"format": "2x1m", "material": "PVC Premium", "finishing": "Œillets renforcés"}'),
-            ('Stickers Personnalisés Deluxe', 'Autocollants vinyle avec découpe sur mesure et laminage brillant', 15000.00, 'print', 0, 10, 'images/macaron.jpg', '{"format": "A5", "material": "Vinyle adhésif", "cutting": "Sur mesure"}'),
-            ('Clé USB 32GB Corporate', 'Support de stockage personnalisé avec logo gravé et packaging premium', 8500.00, 'usb', 25, 5, 'images/32G.jpg', '{"capacity": "32GB", "interface": "USB 3.0", "customization": "Logo gravé"}'),
-            ('Panneau Alucobond 3mm', 'Panneau composite aluminium pour signalétique extérieure durable', 45000.00, 'print', 8, 3, 'images/grandformat.jpg', '{"thickness": "3mm", "size": "1x1m", "weatherproof": "Oui"}'),
-            ('Papier Couche Premium A4', 'Papier de haute qualité pour impressions professionnelles', 3500.00, 'supplies', 100, 20, 'images/Double A A4.jpg', '{"weight": "120g", "finish": "Couché brillant"}')
-        ]
-
-        for product in products:
-            conn.execute('''
-                INSERT OR IGNORE INTO products (name, description, price, category, stock_quantity, min_stock_level, image_url, specifications)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', product)
-
-        # Commandes de démonstration
-        orders = [
-            ('PP202501011201', 1, 45000.00, 'pending', 'pending', 'transfer', 'Douala, Cameroun', 'Douala, Cameroun', 'Commande urgente pour événement', 'À traiter en priorité'),
-            ('PP202501011158', 1, 32000.00, 'confirmed', 'paid', 'card', 'Yaoundé, Cameroun', 'Yaoundé, Cameroun', 'Commande confirmée', 'Payée par carte'),
-            ('PP202501011145', 1, 75000.00, 'delivered', 'paid', 'transfer', 'Bafoussam, Cameroun', 'Bafoussam, Cameroun', 'Livraison effectuée', 'Client satisfait')
-        ]
-
-        for order in orders:
-            conn.execute('''
-                INSERT OR IGNORE INTO orders (order_number, customer_id, total_amount, status, payment_status, payment_method, shipping_address, billing_address, notes, internal_notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', order)
-
-        conn.commit()
-
-# Template HTML du dashboard ultra-professionnel
-PROFESSIONAL_DASHBOARD = """
+# Template HTML professionnel pour le dashboard admin
+ADMIN_DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PassPrint Enterprise Admin - Dashboard Ultra-Professionnel</title>
+    <title>Dashboard Admin - PassPrint</title>
 
-    <!-- Bootstrap 5 -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome Pro -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Animate CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- ApexCharts -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <!-- Socket.IO -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
 
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
-            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --dark-gradient: linear-gradient(135deg, #2D1B69 0%, #11998e 50%, #38ef7d 100%);
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.05);
-            --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
-            --shadow-heavy: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        * {
-            box-sizing: border-box;
+            --primary-color: #2D1B69;
+            --secondary-color: #FF6B35;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
-            color: white;
-            overflow-x: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
 
-        /* Navbar Ultra-Moderne */
-        .navbar {
-            background: rgba(45, 27, 105, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
         .navbar-brand {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #FFD700 0%, #FF6B35 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             font-weight: 800;
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            font-size: 1.5rem;
         }
 
-        .navbar-brand i {
-            font-size: 2rem;
-            color: #FFD700;
-        }
-
-        /* Sidebar Révolutionnaire */
         .sidebar {
-            width: 320px;
-            height: 100vh;
-            background: linear-gradient(180deg, rgba(45, 27, 105, 0.98) 0%, rgba(23, 33, 62, 0.98) 100%);
+            background: rgba(45, 27, 105, 0.95);
             backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 100vh;
             position: fixed;
             left: 0;
             top: 0;
-            color: white;
-            overflow-y: auto;
-            z-index: 999;
-            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar.collapsed {
-            width: 80px;
-        }
-
-        .sidebar-header {
-            padding: 2.5rem 2rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-        }
-
-        .sidebar-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
-        }
-
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .sidebar-logo img {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
-        }
-
-        .sidebar-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .sidebar-subtitle {
-            font-size: 0.9rem;
-            opacity: 0.7;
-            margin-top: 0.5rem;
-        }
-
-        .nav-item {
-            margin: 0.5rem 1rem;
-            position: relative;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            border-radius: 15px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            border: 1px solid transparent;
-        }
-
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: var(--primary-gradient);
-            transition: left 0.4s ease;
-            z-index: -1;
-        }
-
-        .nav-link:hover::before,
-        .nav-link.active::before {
-            left: 0;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            color: white;
-            border-color: rgba(255, 107, 53, 0.3);
-            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.2);
-            transform: translateX(5px) translateY(-2px);
-        }
-
-        .nav-link i {
-            width: 24px;
-            font-size: 1.2rem;
+            width: 280px;
+            z-index: 1000;
             transition: all 0.3s ease;
         }
 
-        .nav-link:hover i {
-            transform: scale(1.1);
-            color: #FFD700;
+        .sidebar.collapsed {
+            margin-left: -280px;
         }
 
-        .nav-badge {
-            position: absolute;
-            top: 50%;
-            right: 1rem;
-            transform: translateY(-50%);
-            background: var(--warning-gradient);
-            color: white;
-            border-radius: 12px;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            min-width: 24px;
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
         }
 
-        /* Main Content */
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255, 107, 53, 0.1);
+            border-left-color: #FF6B35;
+            color: #FF6B35;
+        }
+
+        .sidebar-menu i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
         .main-content {
-            margin-left: 320px;
+            margin-left: 280px;
             padding: 2rem;
-            transition: margin-left 0.4s ease;
+            transition: margin-left 0.3s ease;
         }
 
         .main-content.expanded {
-            margin-left: 80px;
+            margin-left: 0;
         }
 
-        /* Hero Section Spectaculaire */
-        .hero-section {
-            background: var(--primary-gradient);
-            border-radius: 30px;
-            padding: 4rem;
-            margin-bottom: 3rem;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
-        }
-
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="60" cy="30" r="1" fill="rgba(255,255,255,0.12)"/></svg>') repeat;
-            animation: float 30s infinite linear;
-        }
-
-        .hero-section::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 70%, rgba(255, 107, 53, 0.2) 0%, transparent 50%);
-        }
-
-        .floating-shapes {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .shape {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 8s ease-in-out infinite;
-        }
-
-        .shape:nth-child(1) {
-            width: 120px;
-            height: 120px;
-            top: 10%;
-            left: 5%;
-            animation-delay: 0s;
-        }
-
-        .shape:nth-child(2) {
-            width: 80px;
-            height: 80px;
-            top: 60%;
-            right: 15%;
-            animation-delay: -2s;
-        }
-
-        .shape:nth-child(3) {
-            width: 150px;
-            height: 150px;
-            bottom: 10%;
-            left: 60%;
-            animation-delay: -4s;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #fff 0%, #FFD700 50%, #FF6B35 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .hero-subtitle {
-            font-size: 1.4rem;
-            opacity: 0.9;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .hero-stat {
-            text-align: center;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            min-width: 150px;
-        }
-
-        .hero-stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: var(--success-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1;
-        }
-
-        .hero-stat-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-top: 0.5rem;
-        }
-
-        /* Cards Ultra-Modernes */
         .stats-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            padding: 2.5rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stats-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.4s ease;
-        }
-
-        .stats-card:hover::before {
-            transform: scaleX(1);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
         }
 
         .stats-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-            border-color: rgba(255, 107, 53, 0.3);
+            transform: translateY(-5px);
         }
 
         .stats-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 2.5rem;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stats-icon::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: inherit;
-            opacity: 0.2;
-            border-radius: inherit;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .stats-value {
-            font-size: 3rem;
-            font-weight: 900;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1;
+            font-size: 2.5rem;
+            font-weight: 800;
             margin-bottom: 0.5rem;
         }
 
         .stats-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        .stats-trend {
+            color: #666;
             font-size: 0.9rem;
-            margin-top: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .stats-trend.up {
-            background: rgba(67, 233, 123, 0.2);
-            color: #43e97b;
-        }
-
-        .stats-trend.down {
-            background: rgba(240, 147, 251, 0.2);
-            color: #f093fb;
-        }
-
-        /* Graphiques Avancés */
         .chart-container {
-            position: relative;
-            height: 350px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            padding: 1.5rem;
-        }
-
-        /* Tables Professionnelles */
-        .orders-table {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            overflow: hidden;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .table th {
-            background: var(--dark-gradient);
-            color: white;
-            border: none;
-            padding: 1.5rem 1rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: sticky;
-            top: 0;
-        }
-
-        .table td {
-            padding: 1.5rem 1rem;
-            border-color: rgba(255, 255, 255, 0.05);
-            vertical-align: middle;
-        }
-
-        .table tbody tr {
-            transition: all 0.3s ease;
-        }
-
-        .table tbody tr:hover {
-            background: rgba(255, 107, 53, 0.05);
-            transform: scale(1.01);
-        }
-
-        /* Status Badges Animés */
-        .status-badge {
-            padding: 0.75rem 1.5rem;
-            border-radius: 25px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .status-badge::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .status-badge:hover::before {
-            left: 100%;
-        }
-
-        .status-pending {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            color: #856404;
-        }
-
-        .status-confirmed {
-            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-            color: #0c5460;
-        }
-
-        .status-processing {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
-        }
-
-        .status-shipped {
-            background: linear-gradient(135deg, #cce7ff 0%, #b6d4fe 100%);
-            color: #004085;
-        }
-
-        .status-delivered {
-            background: linear-gradient(135deg, #d1ecf1 0%, #a3d5d9 100%);
-            color: #0c5460;
-        }
-
-        .status-cancelled {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-        }
-
-        /* Boutons Révolutionnaires */
-        .btn {
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
             border-radius: 15px;
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
             border: none;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
         }
 
         .btn-primary {
-            background: var(--primary-gradient);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            background: linear-gradient(135deg, #2D1B69 0%, #FF6B35 100%);
+            color: white;
         }
 
         .btn-primary:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 27, 105, 0.3);
         }
 
-        .btn-success {
-            background: var(--success-gradient);
-            box-shadow: 0 8px 25px rgba(67, 233, 123, 0.3);
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
-        .btn-success:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 35px rgba(67, 233, 123, 0.4);
-        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #d1ecf1; color: #0c5460; }
+        .status-processing { background: #fff3cd; color: #856404; }
+        .status-shipped { background: #d4edda; color: #155724; }
+        .status-delivered { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
 
-        .btn-warning {
-            background: var(--warning-gradient);
-            box-shadow: 0 8px 25px rgba(250, 112, 154, 0.3);
-        }
-
-        .btn-warning:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 35px rgba(250, 112, 154, 0.4);
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .loading.show {
+        .alert-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
             display: flex;
+            justify-content: between;
+            align-items: center;
         }
 
-        .loading-spinner {
-            width: 80px;
-            height: 80px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+        .alert-critical { border-color: #dc3545; }
+        .alert-warning { border-color: #ffc107; }
+        .alert-info { border-color: #17a2b8; }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trend-up { color: #28a745; }
+        .trend-down { color: #dc3545; }
+        .trend-stable { color: #6c757d; }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
             border-top: 4px solid #FF6B35;
+            border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
@@ -861,100 +263,22 @@ PROFESSIONAL_DASHBOARD = """
             100% { transform: rotate(360deg); }
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        /* Animations d'Entrée */
-        .animate-slide-up {
-            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .animate-slide-left {
-            animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .animate-slide-right {
-            animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
-                transform: translateX(-100%);
+                margin-left: -280px;
+            }
+
+            .sidebar.show {
+                margin-left: 0;
             }
 
             .main-content {
                 margin-left: 0;
             }
 
-            .hero-title {
-                font-size: 2.5rem;
+            .stats-card {
+                margin-bottom: 1rem;
             }
-
-            .hero-stats {
-                flex-direction: column;
-                gap: 1rem;
-            }
-        }
-
-        /* Dark Mode Support */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-            }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-gradient);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
     </style>
 </head>
@@ -962,341 +286,177 @@ PROFESSIONAL_DASHBOARD = """
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <img src="images/logo.svg" alt="PassPrint Logo" onerror="this.src='https://via.placeholder.com/60x60/FF6B35/FFFFFF?text=PP'">
-                <div>
-                    <div class="sidebar-title">PassPrint</div>
-                    <div class="sidebar-subtitle">Enterprise Admin</div>
-                </div>
-            </div>
+            <h3 style="color: #FFD700; margin: 0;">PassPrint Admin</h3>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Panneau de Contrôle</p>
         </div>
-
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link active" href="#" data-page="dashboard">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                    <span class="nav-badge">3</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="orders">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Commandes</span>
-                    <span class="nav-badge">12</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="products">
-                    <i class="fas fa-box"></i>
-                    <span>Produits</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="customers">
-                    <i class="fas fa-users"></i>
-                    <span>Clients</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="analytics">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="inventory">
-                    <i class="fas fa-warehouse"></i>
-                    <span>Inventaire</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="files">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Fichiers</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="reports">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Rapports</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-page="settings">
-                    <i class="fas fa-cog"></i>
-                    <span>Paramètres</span>
-                </a>
-            </li>
-            <li class="nav-item mt-4">
-                <a class="nav-link text-danger" href="#" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Déconnexion</span>
-                </a>
-            </li>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active" data-page="overview"><i class="fas fa-tachometer-alt"></i>Vue d'ensemble</a></li>
+            <li><a href="#" data-page="orders"><i class="fas fa-shopping-cart"></i>Commandes</a></li>
+            <li><a href="#" data-page="products"><i class="fas fa-box"></i>Produits</a></li>
+            <li><a href="#" data-page="users"><i class="fas fa-users"></i>Utilisateurs</a></li>
+            <li><a href="#" data-page="quotes"><i class="fas fa-file-invoice"></i>Devis</a></li>
+            <li><a href="#" data-page="analytics"><i class="fas fa-chart-bar"></i>Analytiques</a></li>
+            <li><a href="#" data-page="monitoring"><i class="fas fa-heartbeat"></i>Monitoring</a></li>
+            <li><a href="#" data-page="security"><i class="fas fa-shield-alt"></i>Sécurité</a></li>
+            <li><a href="#" data-page="backups"><i class="fas fa-database"></i>Sauvegardes</a></li>
+            <li><a href="#" data-page="settings"><i class="fas fa-cog"></i>Paramètres</a></li>
         </ul>
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg mb-4">
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
+        <nav class="navbar navbar-expand-lg navbar-light mb-4" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 15px; padding: 1rem;">
             <div class="container-fluid">
-                <button class="btn btn-outline-light d-lg-none me-3" onclick="toggleSidebar()">
+                <button class="btn btn-outline-primary" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
 
-                <div class="navbar-brand">
-                    <i class="fas fa-crown"></i>
-                    Centre de Contrôle PassPrint
-                </div>
-
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Real-time Clock -->
-                    <div class="d-none d-md-block">
-                        <div id="current-time" class="text-light" style="font-size: 0.9rem;"></div>
-                        <div id="current-date" class="text-light" style="font-size: 0.8rem; opacity: 0.8;"></div>
-                    </div>
-
-                    <!-- Notifications -->
-                    <div class="dropdown">
-                        <button class="btn btn-outline-light position-relative" data-bs-toggle="dropdown">
-                            <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">5</span>
+                <div class="d-flex align-items-center ms-auto">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i> Alertes
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><h6 class="dropdown-header">Notifications</h6></li>
-                            <li><a class="dropdown-item" href="#">Nouvelle commande #PP202501011201</a></li>
-                            <li><a class="dropdown-item" href="#">Produit en rupture de stock</a></li>
-                            <li><a class="dropdown-item" href="#">Nouveau message client</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-center" href="#">Voir toutes les notifications</a></li>
+                        <ul class="dropdown-menu" id="alertsDropdown">
+                            <li><a class="dropdown-item" href="#">Aucune alerte</a></li>
                         </ul>
                     </div>
 
-                    <!-- User Menu -->
                     <div class="dropdown">
-                        <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
-                            <img src="https://via.placeholder.com/32x32/FF6B35/FFFFFF?text=A" class="rounded-circle me-2" alt="Avatar">
-                            <span id="admin-name">Administrateur</span>
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> Admin
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profil</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-key me-2"></i>Changer mot de passe</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-history me-2"></i>Historique</a></li>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user"></i> Profil</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Paramètres</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
                         </ul>
                     </div>
                 </div>
             </div>
         </nav>
 
-        <!-- Dashboard Page -->
-        <div id="dashboard-page">
-            <!-- Hero Section -->
-            <section class="hero-section text-white position-relative">
-                <div class="floating-shapes">
-                    <div class="shape"></div>
-                    <div class="shape"></div>
-                    <div class="shape"></div>
-                </div>
-                <div class="hero-content">
-                    <div class="row align-items-center">
-                        <div class="col-lg-8">
-                            <h1 class="hero-title animate-slide-up">
-                                Centre de Contrôle <span style="color: #FFD700;">PassPrint</span>
-                            </h1>
-                            <p class="hero-subtitle animate-slide-up" style="animation-delay: 0.2s;">
-                                Gérez votre entreprise d'impression avec une plateforme de gestion d'entreprise de niveau mondial, dotée d'analytics en temps réel et d'automatisation avancée.
-                            </p>
-                            <div class="d-flex gap-3 flex-wrap animate-slide-up" style="animation-delay: 0.4s;">
-                                <button class="btn btn-warning btn-lg" onclick="showPage('orders')">
-                                    <i class="fas fa-plus-circle me-2"></i>Nouvelle Commande
-                                </button>
-                                <button class="btn btn-outline-light btn-lg" onclick="showPage('products')">
-                                    <i class="fas fa-box me-2"></i>Gérer Produits
-                                </button>
-                                <button class="btn btn-success btn-lg" onclick="refreshAllData()">
-                                    <i class="fas fa-sync-alt me-2"></i>Rafraîchir Données
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-lg-4">
-                            <div class="text-center animate-slide-up" style="animation-delay: 0.6s;">
-                                <i class="fas fa-rocket fa-5x text-warning mb-4 animate-float"></i>
-                                <h3 class="h2">Performance</h3>
-                                <p class="mb-3">Votre entreprise en pleine croissance</p>
-                                <div class="hero-stats">
-                                    <div class="hero-stat">
-                                        <div class="hero-stat-value">+25%</div>
-                                        <div class="hero-stat-label">Croissance</div>
-                                    </div>
-                                    <div class="hero-stat">
-                                        <div class="hero-stat-value">98%</div>
-                                        <div class="hero-stat-label">Satisfaction</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <!-- Page Content -->
+        <div id="pageContent">
+            <!-- Overview Page -->
+            <div id="overviewPage" class="page-content">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h1 style="color: white;">Vue d'ensemble</h1>
+                        <p style="color: rgba(255,255,255,0.8);">Dernière mise à jour: <span id="lastUpdate">Chargement...</span></p>
                     </div>
                 </div>
-            </section>
 
-            <!-- Stats Cards -->
-            <div class="row g-4 mb-4">
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card animate-slide-up">
-                        <div class="stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stats-value" id="total-users">-</div>
-                        <div class="stats-label">Clients Actifs</div>
-                        <div class="stats-trend up" id="users-trend">+12% ce mois</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card animate-slide-up" style="animation-delay: 0.1s;">
-                        <div class="stats-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="stats-value" id="total-orders">-</div>
-                        <div class="stats-label">Commandes</div>
-                        <div class="stats-trend up" id="orders-trend">+8% ce mois</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card animate-slide-up" style="animation-delay: 0.2s;">
-                        <div class="stats-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                            <i class="fas fa-box"></i>
-                        </div>
-                        <div class="stats-value" id="total-products">-</div>
-                        <div class="stats-label">Produits Actifs</div>
-                        <div class="stats-trend down" id="stock-warning">2 en rupture</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card animate-slide-up" style="animation-delay: 0.3s;">
-                        <div class="stats-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stats-value" id="monthly-revenue">-</div>
-                        <div class="stats-label">Revenus du Mois</div>
-                        <div class="stats-trend up" id="revenue-trend">+15% vs dernier mois</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-4">
-                <!-- Advanced Chart -->
-                <div class="col-lg-8">
-                    <div class="stats-card">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="mb-0">Évolution des Ventes</h5>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-light active" onclick="loadChartData('month')">Mois</button>
-                                <button class="btn btn-outline-light" onclick="loadChartData('week')">Semaine</button>
-                                <button class="btn btn-outline-light" onclick="loadChartData('day')">Jour</button>
+                <!-- Stats Cards -->
+                <div class="row mb-4" id="statsCards">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-users" style="color: white;"></i>
+                            </div>
+                            <div class="stats-value" id="totalUsers">-</div>
+                            <div class="stats-label">Utilisateurs Totaux</div>
+                            <div class="metric-trend">
+                                <span id="usersTrend" class="trend-stable">↔</span>
+                                <small id="usersTrendValue">-</small>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="stats-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <i class="fas fa-shopping-cart" style="color: white;"></i>
+                            </div>
+                            <div class="stats-value" id="totalOrders">-</div>
+                            <div class="stats-label">Commandes</div>
+                            <div class="metric-trend">
+                                <span id="ordersTrend" class="trend-stable">↔</span>
+                                <small id="ordersTrendValue">-</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="stats-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                <i class="fas fa-box" style="color: white;"></i>
+                            </div>
+                            <div class="stats-value" id="totalProducts">-</div>
+                            <div class="stats-label">Produits</div>
+                            <div class="metric-trend">
+                                <span id="productsTrend" class="trend-stable">↔</span>
+                                <small id="productsTrendValue">-</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="stats-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                <i class="fas fa-dollar-sign" style="color: white;"></i>
+                            </div>
+                            <div class="stats-value" id="monthlyRevenue">-</div>
+                            <div class="stats-label">Revenus du Mois</div>
+                            <div class="metric-trend">
+                                <span id="revenueTrend" class="trend-stable">↔</span>
+                                <small id="revenueTrendValue">-</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-lg-8">
                         <div class="chart-container">
-                            <canvas id="salesChart"></canvas>
+                            <h3 style="color: #2D1B69; margin-bottom: 1.5rem;">Ventes Mensuelles</h3>
+                            <canvas id="salesChart" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69; margin-bottom: 1.5rem;">Statuts des Commandes</h3>
+                            <canvas id="ordersChart" height="300"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
-                <div class="col-lg-4">
-                    <div class="stats-card">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="mb-0">Activité Récente</h5>
-                            <button class="btn btn-outline-warning btn-sm" onclick="showPage('analytics')">
-                                <i class="fas fa-eye me-1"></i>Voir tout
-                            </button>
-                        </div>
-                        <div class="activity-timeline">
-                            <div class="timeline-item d-flex mb-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
-                                <div class="timeline-marker bg-success rounded-circle me-3 mt-1"></div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold">Nouvelle commande #PP202501011201</div>
-                                    <small class="text-muted">Il y a 5 minutes • Banderole Publicitaire × 2</small>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold text-success">45,000 FCFA</div>
-                                </div>
-                            </div>
-                            <div class="timeline-item d-flex mb-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
-                                <div class="timeline-marker bg-primary rounded-circle me-3 mt-1"></div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold">Produit ajouté au catalogue</div>
-                                    <small class="text-muted">Il y a 15 minutes • Clé USB 64GB</small>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold text-primary">Nouveau</div>
-                                </div>
-                            </div>
-                            <div class="timeline-item d-flex mb-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
-                                <div class="timeline-marker bg-warning rounded-circle me-3 mt-1"></div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold">Commande expédiée #PP202501011145</div>
-                                    <small class="text-muted">Il y a 32 minutes • Panneau A1</small>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold text-warning">Expédiée</div>
-                                </div>
+                <!-- Recent Orders and Alerts -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="table-container">
+                            <h3 style="color: #2D1B69; margin-bottom: 1.5rem;">Commandes Récentes</h3>
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="recentOrdersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Commande</th>
+                                            <th>Client</th>
+                                            <th>Montant</th>
+                                            <th>Statut</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentOrdersBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center">Chargement...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Services Overview -->
-            <div class="row g-4 mt-2">
-                <div class="col-12">
-                    <div class="stats-card">
-                        <h4 class="mb-4 text-center">Services d'Impression Premium</h4>
-                        <div class="row g-4">
-                            <div class="col-lg-3 col-md-6">
-                                <div class="text-center p-4 rounded" style="background: rgba(255, 107, 53, 0.1); border: 1px solid rgba(255, 107, 53, 0.2);">
-                                    <i class="fas fa-flag fa-4x text-warning mb-3"></i>
-                                    <h6 class="h5">Banderoles</h6>
-                                    <p class="mb-3">Grand format professionnel</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-warning">25,000 FCFA/m²</span>
-                                        <span class="badge bg-success">Stock: 15</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="text-center p-4 rounded" style="background: rgba(245, 87, 108, 0.1); border: 1px solid rgba(245, 87, 108, 0.2);">
-                                    <i class="fas fa-sticky-note fa-4x text-warning mb-3"></i>
-                                    <h6 class="h5">Stickers</h6>
-                                    <p class="mb-3">Découpe personnalisée</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-warning">15,000 FCFA/100</span>
-                                        <span class="badge bg-danger">Stock: 0</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="text-center p-4 rounded" style="background: rgba(79, 172, 254, 0.1); border: 1px solid rgba(79, 172, 254, 0.2);">
-                                    <i class="fas fa-cube fa-4x text-warning mb-3"></i>
-                                    <h6 class="h5">Panneaux</h6>
-                                    <p class="mb-3">Supports rigides</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-warning">45,000 FCFA/m²</span>
-                                        <span class="badge bg-success">Stock: 8</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="text-center p-4 rounded" style="background: rgba(0, 166, 118, 0.1); border: 1px solid rgba(0, 166, 118, 0.2);">
-                                    <i class="fas fa-usb fa-4x text-warning mb-3"></i>
-                                    <h6 class="h5">Clés USB</h6>
-                                    <p class="mb-3">Stockage personnalisé</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-warning">8,500 FCFA/32GB</span>
-                                        <span class="badge bg-success">Stock: 25</span>
+                    <div class="col-lg-4">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69; margin-bottom: 1.5rem;">Alertes Système</h3>
+                            <div id="alertsContainer">
+                                <div class="alert-item alert-info">
+                                    <div>
+                                        <strong>Système opérationnel</strong><br>
+                                        <small>Tous les services fonctionnent normalement</small>
                                     </div>
                                 </div>
                             </div>
@@ -1304,305 +464,384 @@ PROFESSIONAL_DASHBOARD = """
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Orders Page -->
-        <div id="orders-page" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">Gestion des Commandes</h2>
-                <div class="d-flex gap-2">
-                    <select class="form-select" id="status-filter" style="width: auto;">
-                        <option value="">Tous les statuts</option>
-                        <option value="pending">En attente</option>
-                        <option value="confirmed">Confirmée</option>
-                        <option value="processing">En cours</option>
-                        <option value="shipped">Expédiée</option>
-                        <option value="delivered">Livrée</option>
-                        <option value="cancelled">Annulée</option>
-                    </select>
-                    <button class="btn btn-success" onclick="addNewOrder()">
-                        <i class="fas fa-plus me-2"></i>Nouvelle Commande
-                    </button>
-                    <button class="btn btn-outline-primary" onclick="exportOrders()">
-                        <i class="fas fa-download me-2"></i>Exporter
-                    </button>
-                </div>
-            </div>
-
-            <div class="orders-table">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Commande</th>
-                            <th>Client</th>
-                            <th>Produits</th>
-                            <th>Montant</th>
-                            <th>Statut</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orders-table-body">
-                        <!-- Orders will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Products Page -->
-        <div id="products-page" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">Gestion des Produits</h2>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">
-                    <i class="fas fa-plus me-2"></i>Ajouter un Produit
-                </button>
-            </div>
-
-            <!-- Product Filters -->
-            <div class="stats-card p-3 mb-4">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <select class="form-select" id="category-filter">
-                            <option>Toutes les catégories</option>
-                            <option>Impression</option>
-                            <option>USB</option>
-                            <option>Fournitures</option>
+            <!-- Orders Page -->
+            <div id="ordersPage" class="page-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 style="color: white;">Gestion des Commandes</h1>
+                    <div>
+                        <select class="form-select" id="ordersFilter" style="width: auto;">
+                            <option value="">Tous les statuts</option>
+                            <option value="pending">En attente</option>
+                            <option value="confirmed">Confirmée</option>
+                            <option value="processing">En cours</option>
+                            <option value="shipped">Expédiée</option>
+                            <option value="delivered">Livrée</option>
+                            <option value="cancelled">Annulée</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <select class="form-select" id="stock-filter">
-                            <option>Tous les stocks</option>
-                            <option>En stock</option>
-                            <option>Rupture de stock</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" placeholder="Rechercher produit..." id="product-search">
-                    </div>
-                    <div class="col-md-3">
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-primary" onclick="filterProducts()">Filtrer</button>
-                            <button class="btn btn-outline-secondary" onclick="resetFilters()">Reset</button>
-                        </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>Commande</th>
+                                    <th>Client</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Products Grid -->
-            <div class="row g-4" id="products-grid">
-                <!-- Products will be loaded here -->
-            </div>
-        </div>
+            <!-- Products Page -->
+            <div id="productsPage" class="page-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 style="color: white;">Gestion des Produits</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                        <i class="fas fa-plus"></i> Ajouter un Produit
+                    </button>
+                </div>
 
-        <!-- Customers Page -->
-        <div id="customers-page" style="display: none;">
-            <h2 class="mb-4">Gestion des Clients</h2>
-            <div class="stats-card p-4">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Client</th>
-                                <th>Contact</th>
-                                <th>Commandes</th>
-                                <th>Total Dépensé</th>
-                                <th>Dernière Commande</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customers-table-body">
-                            <!-- Customers will be loaded here -->
-                        </tbody>
-                    </table>
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>Catégorie</th>
+                                    <th>Prix</th>
+                                    <th>Stock</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Analytics Page -->
-        <div id="analytics-page" style="display: none;">
-            <h2 class="mb-4">Analytics & Business Intelligence</h2>
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="stats-card p-4">
-                        <h5 class="mb-4">Ventes par Catégorie</h5>
+            <!-- Users Page -->
+            <div id="usersPage" class="page-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 style="color: white;">Gestion des Utilisateurs</h1>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Entreprise</th>
+                                    <th>Admin</th>
+                                    <th>Date d'inscription</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analyticsPage" class="page-content" style="display: none;">
+                <h1 style="color: white; margin-bottom: 2rem;">Analytiques Avancées</h1>
+
+                <div class="row mb-4">
+                    <div class="col-lg-6">
                         <div class="chart-container">
-                            <canvas id="categoryChart"></canvas>
+                            <h3 style="color: #2D1B69;">Top Produits</h3>
+                            <canvas id="topProductsChart" height="300"></canvas>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="stats-card p-4">
-                        <h5 class="mb-4">Top Produits</h5>
+                    <div class="col-lg-6">
                         <div class="chart-container">
-                            <canvas id="productsChart"></canvas>
+                            <h3 style="color: #2D1B69;">Répartition par Catégorie</h3>
+                            <canvas id="categoryChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="color: #2D1B69;">Évolution des Ventes</h3>
+                    <canvas id="revenueChart" height="400"></canvas>
+                </div>
+            </div>
+
+            <!-- Monitoring Page -->
+            <div id="monitoringPage" class="page-content" style="display: none;">
+                <h1 style="color: white; margin-bottom: 2rem;">Monitoring Système</h1>
+
+                <div class="row mb-4">
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Utilisation CPU</h3>
+                            <canvas id="cpuChart" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Utilisation Mémoire</h3>
+                            <canvas id="memoryChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Temps de Réponse</h3>
+                            <canvas id="responseTimeChart" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Score de Sécurité</h3>
+                            <canvas id="securityChart" height="300"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Inventory Page -->
-        <div id="inventory-page" style="display: none;">
-            <h2 class="mb-4">Gestion de l'Inventaire</h2>
-            <div class="stats-card p-4">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Produit</th>
-                                <th>Stock Actuel</th>
-                                <th>Stock Minimum</th>
-                                <th>Statut</th>
-                                <th>Dernier Réappro</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventory-table-body">
-                            <!-- Inventory will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            <!-- Security Page -->
+            <div id="securityPage" class="page-content" style="display: none;">
+                <h1 style="color: white; margin-bottom: 2rem;">Centre de Sécurité</h1>
 
-        <!-- Files Page -->
-        <div id="files-page" style="display: none;">
-            <h2 class="mb-4">Gestion des Fichiers</h2>
-            <div class="stats-card p-4">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Fichier</th>
-                                <th>Type</th>
-                                <th>Taille</th>
-                                <th>Uploadé par</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="files-table-body">
-                            <!-- Files will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reports Page -->
-        <div id="reports-page" style="display: none;">
-            <h2 class="mb-4">Rapports & Analytics</h2>
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="stats-card p-4 text-center">
-                        <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
-                        <h5>Rapport des Ventes</h5>
-                        <button class="btn btn-danger" onclick="generateSalesReport()">Générer PDF</button>
+                <div class="row mb-4">
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Événements de Sécurité (24h)</h3>
+                            <canvas id="securityEventsChart" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Tentatives de Connexion</h3>
+                            <canvas id="loginAttemptsChart" height="300"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="stats-card p-4 text-center">
-                        <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
-                        <h5>Rapport Analytics</h5>
-                        <button class="btn btn-success" onclick="generateAnalyticsReport()">Générer Rapport</button>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="stats-card p-4 text-center">
-                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                        <h5>Rapport Clients</h5>
-                        <button class="btn btn-primary" onclick="generateCustomerReport()">Générer Rapport</button>
+
+                <div class="table-container">
+                    <h3 style="color: #2D1B69; margin-bottom: 1.5rem;">Logs de Sécurité Récents</h3>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="securityLogsTable">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>Détails</th>
+                                    <th>IP</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="securityLogsBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Settings Page -->
-        <div id="settings-page" style="display: none;">
-            <h2 class="mb-4">Paramètres Système</h2>
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="stats-card p-4">
-                        <h5 class="mb-4">Configuration Email</h5>
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Serveur SMTP</label>
-                                <input type="text" class="form-control" value="smtp.gmail.com">
+            <!-- Backups Page -->
+            <div id="backupsPage" class="page-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 style="color: white;">Gestion des Sauvegardes</h1>
+                    <div>
+                        <button class="btn btn-success" onclick="createFullBackup()">
+                            <i class="fas fa-plus"></i> Nouvelle Sauvegarde
+                        </button>
+                        <button class="btn btn-warning" onclick="testBackupIntegrity()">
+                            <i class="fas fa-check"></i> Tester l'Intégrité
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-lg-4">
+                        <div class="stats-card">
+                            <div class="stats-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                                <i class="fas fa-database" style="color: white;"></i>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email expéditeur</label>
-                                <input type="email" class="form-control" value="passprint@gmail.com">
+                            <div class="stats-value" id="backupCount">-</div>
+                            <div class="stats-label">Sauvegardes</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="stats-card">
+                            <div class="stats-icon" style="background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);">
+                                <i class="fas fa-hdd" style="color: white;"></i>
                             </div>
-                            <button class="btn btn-primary">Tester Configuration</button>
-                        </form>
+                            <div class="stats-value" id="totalBackupSize">-</div>
+                            <div class="stats-label">Espace Utilisé</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="stats-card">
+                            <div class="stats-icon" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
+                                <i class="fas fa-clock" style="color: white;"></i>
+                            </div>
+                            <div class="stats-value" id="lastBackup">-</div>
+                            <div class="stats-label">Dernière Sauvegarde</div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="stats-card p-4">
-                        <h5 class="mb-4">Configuration Stripe</h5>
-                        <div class="mb-3">
-                            <label class="form-label">Clé publique</label>
-                            <input type="text" class="form-control" value="pk_test_...">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Clé secrète</label>
-                            <input type="password" class="form-control" value="sk_test_...">
-                        </div>
-                        <button class="btn btn-success">Vérifier Connexion</button>
+
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="backupsTable">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Fichier</th>
+                                    <th>Taille</th>
+                                    <th>Statut</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="backupsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <!-- Loading Overlay -->
-    <div class="loading" id="loading">
-        <div class="text-center">
-            <div class="loading-spinner"></div>
-            <h4 class="text-light mt-3">Chargement du Dashboard...</h4>
-            <p class="text-light">Récupération des données en temps réel</p>
+            <!-- Settings Page -->
+            <div id="settingsPage" class="page-content" style="display: none;">
+                <h1 style="color: white; margin-bottom: 2rem;">Paramètres Système</h1>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Configuration Générale</h3>
+                            <form id="settingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Nom de l'application</label>
+                                    <input type="text" class="form-control" value="PassPrint" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Version</label>
+                                    <input type="text" class="form-control" value="2.0.0" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Environnement</label>
+                                    <input type="text" class="form-control" value="Production" readonly>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <h3 style="color: #2D1B69;">Actions Système</h3>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="clearAllCaches()">
+                                    <i class="fas fa-broom"></i> Vider tous les Caches
+                                </button>
+                                <button class="btn btn-warning" onclick="restartServices()">
+                                    <i class="fas fa-redo"></i> Redémarrer les Services
+                                </button>
+                                <button class="btn btn-info" onclick="generateSystemReport()">
+                                    <i class="fas fa-file-alt"></i> Générer un Rapport
+                                </button>
+                                <button class="btn btn-danger" onclick="emergencyMaintenance()">
+                                    <i class="fas fa-exclamation-triangle"></i> Maintenance d'Urgence
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Product Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1">
+    <!-- Add Product Modal -->
+    <div class="modal fade" id="addProductModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="background: linear-gradient(135deg, #2D1B69 0%, #4A3585 100%); color: white;">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Ajouter un Produit</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="product-form">
-                        <div class="row g-3">
+                    <form id="addProductForm">
+                        <div class="row">
                             <div class="col-md-6">
-                                <label class="form-label">Nom du produit *</label>
-                                <input type="text" class="form-control" id="product-name" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Prix *</label>
-                                <input type="number" class="form-control" id="product-price" step="0.01" required>
+                                <div class="mb-3">
+                                    <label class="form-label">Nom du produit *</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Catégorie</label>
-                                <select class="form-select" id="product-category">
-                                    <option value="print">Impression</option>
-                                    <option value="supplies">Fournitures</option>
-                                    <option value="usb">Clés USB</option>
-                                    <option value="other">Autre</option>
-                                </select>
+                                <div class="mb-3">
+                                    <label class="form-label">Prix *</label>
+                                    <input type="number" class="form-control" name="price" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Catégorie *</label>
+                                    <select class="form-select" name="category" required>
+                                        <option value="">Choisir une catégorie</option>
+                                        <option value="print">Impression</option>
+                                        <option value="supplies">Fournitures</option>
+                                        <option value="usb">Clés USB</option>
+                                        <option value="other">Autres</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Stock initial</label>
-                                <input type="number" class="form-control" id="product-stock" value="0">
+                                <div class="mb-3">
+                                    <label class="form-label">Quantité en stock</label>
+                                    <input type="number" class="form-control" name="stock_quantity" value="0">
+                                </div>
                             </div>
-                            <div class="col-12">
-                                <label class="form-label">Description</label>
-                                <textarea class="form-control" id="product-description" rows="3"></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Image URL</label>
-                                <input type="url" class="form-control" id="product-image">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">URL de l'image</label>
+                            <input type="url" class="form-control" name="image_url">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_active" checked>
+                                <label class="form-check-label">Produit actif</label>
                             </div>
                         </div>
                     </form>
@@ -1618,264 +857,140 @@ PROFESSIONAL_DASHBOARD = """
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Configuration
-        const API_BASE = 'http://localhost:5000/api/admin';
-        let currentUser = null;
-        let currentToken = null;
+        const API_BASE = '/api';
+        const REFRESH_INTERVAL = 30000; // 30 secondes
 
-        // Initialize dashboard
+        // Variables globales
+        let currentPage = 'overview';
+        let charts = {};
+        let refreshTimer;
+
+        // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
-            // Set current date and time
-            updateDateTime();
+            initializeDashboard();
+            setupEventListeners();
+            loadDashboardData();
 
-            // Load dashboard by default
-            loadDashboard();
+            // Démarrer le rafraîchissement automatique
+            startAutoRefresh();
+        });
 
-            // Navigation
-            document.querySelectorAll('.nav-link').forEach(link => {
+        function initializeDashboard() {
+            // Initialiser les graphiques
+            initializeCharts();
+
+            // Configurer DataTables
+            if (typeof $.fn.DataTable !== 'undefined') {
+                $('#ordersTable, #productsTable, #usersTable, #securityLogsTable, #backupsTable').DataTable({
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/fr-FR.json'
+                    },
+                    pageLength: 25,
+                    responsive: true
+                });
+            }
+        }
+
+        function setupEventListeners() {
+            // Navigation sidebar
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = this.getAttribute('data-page');
                     showPage(page);
-
-                    // Update active state
-                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
                 });
             });
 
-            // Initialize charts
-            initializeCharts();
-
-            // Auto-refresh every 30 seconds
-            setInterval(refreshAllData, 30000);
-
-            // Update time every minute
-            setInterval(updateDateTime, 60000);
-        });
-
-        function updateDateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            const dateString = now.toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+            // Toggle sidebar
+            document.getElementById('sidebarToggle').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('show');
+                document.getElementById('mainContent').classList.toggle('expanded');
             });
 
-            document.getElementById('current-time').textContent = timeString;
-            document.getElementById('current-date').textContent = dateString;
+            // Orders filter
+            document.getElementById('ordersFilter').addEventListener('change', function() {
+                loadOrders();
+            });
         }
 
-        // Page management
-        function showPage(page) {
-            // Hide all pages
-            document.querySelectorAll('[id$="-page"]').forEach(p => {
-                p.style.display = 'none';
+        function showPage(pageName) {
+            // Masquer toutes les pages
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.style.display = 'none';
             });
 
-            // Show selected page
-            document.getElementById(`${page}-page`).style.display = 'block';
+            // Afficher la page demandée
+            document.getElementById(pageName + 'Page').style.display = 'block';
+            currentPage = pageName;
 
-            // Load page data
-            switch(page) {
-                case 'dashboard':
-                    loadDashboard();
-                    break;
-                case 'orders':
-                    loadOrders();
-                    break;
-                case 'products':
-                    loadProducts();
-                    break;
-                case 'customers':
-                    loadCustomers();
-                    break;
-                case 'analytics':
-                    loadAnalytics();
-                    break;
-            }
+            // Mettre à jour la navigation
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+
+            // Charger les données de la page
+            loadPageData(pageName);
         }
 
-        // Dashboard functions
-        async function loadDashboard() {
-            showLoading();
-
+        async function loadDashboardData() {
             try {
-                // Load data from API
-                const [dashboardData, ordersData, productsData, usersData] = await Promise.all([
-                    fetchWithAuth(`${API_BASE}/dashboard`),
-                    fetchWithAuth(`${API_BASE}/orders?page=1&per_page=5`),
-                    fetchWithAuth(`${API_BASE}/products`),
-                    fetchWithAuth(`${API_BASE}/users?page=1&per_page=5`)
-                ]);
+                const response = await fetch(`${API_BASE}/admin/dashboard`);
+                const data = await response.json();
 
-                if (dashboardData.ok) {
-                    const data = await dashboardData.json();
-
-                    // Update stats with animation
-                    animateValue('total-users', 0, data.stats.total_users, 1000);
-                    animateValue('total-orders', 0, data.stats.total_orders, 1000);
-                    animateValue('total-products', 0, data.stats.total_products, 1000);
-                    document.getElementById('monthly-revenue').textContent =
-                        new Intl.NumberFormat('fr-FR', {
-                            style: 'currency',
-                            currency: 'XOF'
-                        }).format(data.stats.monthly_revenue);
-
-                    // Load recent orders
-                    if (ordersData.ok) {
-                        const orders = await ordersData.json();
-                        renderRecentOrders(orders.orders || []);
-                    }
-
-                    // Load chart
-                    loadSalesChart(data.monthly_sales || []);
+                if (response.ok) {
+                    updateStatsCards(data.stats);
+                    updateRecentOrders(data.recent_orders);
+                    updateCharts(data);
+                    updateLastUpdate();
+                } else {
+                    console.error('Erreur chargement dashboard:', data.error);
                 }
-
             } catch (error) {
-                console.error('Dashboard load error:', error);
-                loadDemoData();
+                console.error('Erreur réseau:', error);
             }
-
-            hideLoading();
         }
 
-        function loadDemoData() {
-            // Fallback demo data
-            document.getElementById('total-users').textContent = '156';
-            document.getElementById('total-orders').textContent = '89';
-            document.getElementById('total-products').textContent = '12';
-            document.getElementById('monthly-revenue').textContent = '1,250,000 FCFA';
-
-            loadSalesChart([
-                {month: '2024-12', revenue: 850000},
-                {month: '2025-01', revenue: 1250000}
-            ]);
+        function updateStatsCards(stats) {
+            document.getElementById('totalUsers').textContent = stats.total_users || 0;
+            document.getElementById('totalOrders').textContent = stats.total_orders || 0;
+            document.getElementById('totalProducts').textContent = stats.total_products || 0;
+            document.getElementById('monthlyRevenue').textContent = formatPrice(stats.monthly_revenue || 0);
         }
 
-        function renderRecentOrders(orders) {
-            const container = document.querySelector('.activity-timeline');
+        function updateRecentOrders(orders) {
+            const tbody = document.getElementById('recentOrdersBody');
 
             if (!orders || orders.length === 0) {
-                container.innerHTML = '<p class="text-muted">Aucune activité récente</p>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune commande récente</td></tr>';
                 return;
             }
 
-            container.innerHTML = orders.map(order => `
-                <div class="timeline-item d-flex mb-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
-                    <div class="timeline-marker bg-success rounded-circle me-3 mt-1"></div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold">Commande ${order.order_number}</div>
-                        <small class="text-muted">${new Date(order.created_at).toLocaleString('fr-FR')} • ${formatPrice(order.total_amount)}</small>
-                    </div>
-                    <div class="text-end">
-                        <span class="status-badge status-${order.status}">${getStatusLabel(order.status)}</span>
-                    </div>
-                </div>
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><strong>${order.order_number}</strong></td>
+                    <td>${order.customer_id || 'N/A'}</td>
+                    <td>${formatPrice(order.total_amount)}</td>
+                    <td><span class="status-badge status-${order.status}">${getStatusLabel(order.status)}</span></td>
+                    <td>${new Date(order.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewOrder('${order.order_number}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="editOrder('${order.order_number}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
             `).join('');
         }
 
-        function loadSalesChart(monthlySales) {
-            const ctx = document.getElementById('salesChart').getContext('2d');
-
-            // Destroy existing chart if it exists
-            if (window.salesChart) {
-                window.salesChart.destroy();
-            }
-
-            // Default data if no sales data
-            if (!monthlySales || monthlySales.length === 0) {
-                monthlySales = [
-                    {month: '2024-12', revenue: 850000},
-                    {month: '2025-01', revenue: 1250000}
-                ];
-            }
-
-            window.salesChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: monthlySales.map(sale => {
-                        const date = new Date(sale.month + '-01');
-                        return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
-                    }),
-                    datasets: [{
-                        label: 'Ventes (FCFA)',
-                        data: monthlySales.map(sale => sale.revenue),
-                        borderColor: '#FF6B35',
-                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#FFD700',
-                        pointBorderColor: '#FF6B35',
-                        pointBorderWidth: 3,
-                        pointRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return (value / 1000) + 'K FCFA';
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        // Utility functions
-        function showLoading() {
-            document.getElementById('loading').classList.add('show');
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').classList.remove('show');
-        }
-
-        async function fetchWithAuth(url) {
-            try {
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${currentToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                return response;
-            } catch (error) {
-                console.error('API Error:', error);
-                return { ok: false };
-            }
+        function updateLastUpdate() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('fr-FR');
         }
 
         function formatPrice(price) {
-            return new Intl.NumberFormat('fr-FR', {
-                style: 'currency',
-                currency: 'XOF',
-                minimumFractionDigits: 0
-            }).format(price);
+            return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
         }
 
         function getStatusLabel(status) {
@@ -1890,204 +1005,591 @@ PROFESSIONAL_DASHBOARD = """
             return labels[status] || status;
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.querySelector('.main-content').classList.toggle('expanded');
-        }
-
-        function refreshAllData() {
-            loadDashboard();
-            showNotification('Données rafraîchies avec succès!', 'success');
-        }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `alert alert-${type} position-fixed animate-slide-up`;
-            notification.style.cssText = `
-                top: 20px;
-                right: 20px;
-                z-index: 9999;
-                min-width: 300px;
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            `;
-            notification.innerHTML = `<i class="fas fa-info-circle me-2"></i>${message}`;
-
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        function animateValue(elementId, start, end, duration) {
-            const element = document.getElementById(elementId);
-            let startTimestamp = null;
-
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                element.textContent = Math.floor(progress * (end - start) + start);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function logout() {
-            localStorage.removeItem('admin_token');
-            window.location.href = 'index.html';
-        }
-
-        // Placeholder functions for other features
-        function loadOrders() {
-            console.log('Loading orders...');
-        }
-
-        function loadProducts() {
-            console.log('Loading products...');
-        }
-
-        function loadCustomers() {
-            console.log('Loading customers...');
-        }
-
-        function loadAnalytics() {
-            console.log('Loading analytics...');
-        }
-
-        function saveProduct() {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-            modal.hide();
-            showNotification('Produit ajouté avec succès!', 'success');
-        }
-
         function initializeCharts() {
-            // Initialize all charts with demo data
-            setTimeout(() => {
-                loadSalesChart([]);
-            }, 1000);
+            // Graphique des ventes mensuelles
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            charts.salesChart = new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Ventes (FCFA)',
+                        data: [],
+                        borderColor: '#2D1B69',
+                        backgroundColor: 'rgba(45, 27, 105, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatPrice(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Graphique des statuts de commandes
+            const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+            charts.ordersChart = new Chart(ordersCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#ffc107', '#17a2b8', '#28a745', '#dc3545', '#6f42c1', '#fd7e14'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
         }
+
+        function updateCharts(data) {
+            // Mettre à jour le graphique des ventes
+            if (data.monthly_sales && charts.salesChart) {
+                charts.salesChart.data.labels = data.monthly_sales.map(item => item.month);
+                charts.salesChart.data.datasets[0].data = data.monthly_sales.map(item => item.revenue);
+                charts.salesChart.update();
+            }
+
+            // Mettre à jour le graphique des statuts
+            if (data.status_counts && charts.ordersChart) {
+                const statusLabels = Object.keys(data.status_counts);
+                const statusData = Object.values(data.status_counts);
+
+                charts.ordersChart.data.labels = statusLabels.map(label => getStatusLabel(label));
+                charts.ordersChart.data.datasets[0].data = statusData;
+                charts.ordersChart.update();
+            }
+        }
+
+        function loadPageData(pageName) {
+            switch(pageName) {
+                case 'orders':
+                    loadOrders();
+                    break;
+                case 'products':
+                    loadProducts();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+                case 'monitoring':
+                    loadMonitoring();
+                    break;
+                case 'security':
+                    loadSecurityLogs();
+                    break;
+                case 'backups':
+                    loadBackups();
+                    break;
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const statusFilter = document.getElementById('ordersFilter').value;
+                let url = `${API_BASE}/admin/orders`;
+                if (statusFilter) {
+                    url += `?status=${statusFilter}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateOrdersTable(data.orders);
+                } else {
+                    console.error('Erreur chargement commandes:', data.error);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+            }
+        }
+
+        function updateOrdersTable(orders) {
+            const tbody = document.getElementById('ordersTableBody');
+
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune commande trouvée</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><strong>${order.order_number}</strong></td>
+                    <td>${order.customer_id || 'N/A'}</td>
+                    <td>${formatPrice(order.total_amount)}</td>
+                    <td><span class="status-badge status-${order.status}">${getStatusLabel(order.status)}</span></td>
+                    <td>${new Date(order.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewOrder('${order.order_number}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="editOrder('${order.order_number}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder('${order.order_number}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/products`);
+                const products = await response.json();
+
+                updateProductsTable(products);
+            } catch (error) {
+                console.error('Erreur chargement produits:', error);
+            }
+        }
+
+        function updateProductsTable(products) {
+            const tbody = document.getElementById('productsTableBody');
+
+            if (!products || products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Aucun produit trouvé</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td>${product.id}</td>
+                    <td><strong>${product.name}</strong></td>
+                    <td><span class="badge bg-secondary">${product.category}</span></td>
+                    <td>${formatPrice(product.price)}</td>
+                    <td>${product.stock_quantity || 0}</td>
+                    <td>
+                        <span class="status-badge ${product.is_active ? 'status-delivered' : 'status-cancelled'}">
+                            ${product.is_active ? 'Actif' : 'Inactif'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editProduct(${product.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="toggleProductStatus(${product.id})">
+                            <i class="fas fa-toggle-${product.is_active ? 'off' : 'on'}"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/users`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateUsersTable(data.users);
+                } else {
+                    console.error('Erreur chargement utilisateurs:', data.error);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+            }
+        }
+
+        function updateUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Aucun utilisateur trouvé</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td><strong>${user.first_name} ${user.last_name}</strong></td>
+                    <td>${user.email}</td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td>${user.company || 'N/A'}</td>
+                    <td>
+                        <span class="status-badge ${user.is_admin ? 'status-delivered' : 'status-pending'}">
+                            ${user.is_admin ? 'Admin' : 'Utilisateur'}
+                        </span>
+                    </td>
+                    <td>${new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editUser(${user.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="resetUserPassword(${user.id})">
+                            <i class="fas fa-key"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/analytics`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateAnalyticsCharts(data);
+                } else {
+                    console.error('Erreur chargement analytiques:', data.error);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+            }
+        }
+
+        function updateAnalyticsCharts(data) {
+            // Mettre à jour le graphique des top produits
+            if (data.top_products && charts.topProductsChart) {
+                charts.topProductsChart.data.labels = data.top_products.map(item => item.product.name);
+                charts.topProductsChart.data.datasets[0].data = data.top_products.map(item => item.total_sold);
+                charts.topProductsChart.update();
+            }
+
+            // Mettre à jour le graphique des revenus
+            if (data.monthly_sales && charts.revenueChart) {
+                charts.revenueChart.data.labels = data.monthly_sales.map(item => item.month);
+                charts.revenueChart.data.datasets[0].data = data.monthly_sales.map(item => item.revenue);
+                charts.revenueChart.update();
+            }
+        }
+
+        async function loadMonitoring() {
+            try {
+                const response = await fetch(`${API_BASE}/monitoring/metrics`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateMonitoringCharts(data.metrics);
+                } else {
+                    console.error('Erreur chargement monitoring:', data.error);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+            }
+        }
+
+        function updateMonitoringCharts(metrics) {
+            // Mettre à jour les graphiques de monitoring
+            if (metrics.system) {
+                updateSystemCharts(metrics.system);
+            }
+        }
+
+        function updateSystemCharts(systemMetrics) {
+            // Mettre à jour les graphiques système
+            console.log('Mise à jour graphiques système:', systemMetrics);
+        }
+
+        async function loadSecurityLogs() {
+            try {
+                // Simulation des logs de sécurité
+                const mockSecurityLogs = [
+                    {
+                        created_at: new Date().toISOString(),
+                        action: 'login_success',
+                        details: 'Connexion réussie',
+                        ip_address: '192.168.1.100',
+                        status: 'success'
+                    },
+                    {
+                        created_at: new Date(Date.now() - 3600000).toISOString(),
+                        action: 'failed_login',
+                        details: 'Tentative de connexion échouée',
+                        ip_address: '192.168.1.101',
+                        status: 'failure'
+                    }
+                ];
+
+                updateSecurityLogsTable(mockSecurityLogs);
+            } catch (error) {
+                console.error('Erreur chargement logs sécurité:', error);
+            }
+        }
+
+        function updateSecurityLogsTable(logs) {
+            const tbody = document.getElementById('securityLogsBody');
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Aucun log de sécurité</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td>${new Date(log.created_at).toLocaleString('fr-FR')}</td>
+                    <td>${log.action}</td>
+                    <td>${log.details}</td>
+                    <td>${log.ip_address || 'N/A'}</td>
+                    <td><span class="status-badge ${log.status === 'success' ? 'status-delivered' : 'status-cancelled'}">${log.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadBackups() {
+            try {
+                // Simulation des sauvegardes
+                const mockBackups = [
+                    {
+                        backup_type: 'database',
+                        file_path: '/backups/passprint_db_20250104.sql.gz',
+                        file_size: 52428800,
+                        status: 'success',
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        backup_type: 'files',
+                        file_path: '/backups/passprint_files_20250104.tar.gz',
+                        file_size: 104857600,
+                        status: 'success',
+                        created_at: new Date(Date.now() - 86400000).toISOString()
+                    }
+                ];
+
+                updateBackupsTable(mockBackups);
+                updateBackupStats(mockBackups);
+            } catch (error) {
+                console.error('Erreur chargement sauvegardes:', error);
+            }
+        }
+
+        function updateBackupsTable(backups) {
+            const tbody = document.getElementById('backupsTableBody');
+
+            if (!backups || backups.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune sauvegarde trouvée</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = backups.map(backup => `
+                <tr>
+                    <td><span class="badge bg-secondary">${backup.backup_type}</span></td>
+                    <td>${backup.file_path.split('/').pop()}</td>
+                    <td>${formatFileSize(backup.file_size)}</td>
+                    <td><span class="status-badge ${backup.status === 'success' ? 'status-delivered' : 'status-cancelled'}">${backup.status}</span></td>
+                    <td>${new Date(backup.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="restoreBackup('${backup.file_path}')">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="downloadBackup('${backup.file_path}')">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBackup('${backup.file_path}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateBackupStats(backups) {
+            document.getElementById('backupCount').textContent = backups.length;
+            const totalSize = backups.reduce((sum, backup) => sum + backup.file_size, 0);
+            document.getElementById('totalBackupSize').textContent = formatFileSize(totalSize);
+
+            if (backups.length > 0) {
+                const lastBackup = backups.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                document.getElementById('lastBackup').textContent = new Date(lastBackup.created_at).toLocaleDateString('fr-FR');
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function startAutoRefresh() {
+            refreshTimer = setInterval(() => {
+                if (currentPage === 'overview') {
+                    loadDashboardData();
+                }
+            }, REFRESH_INTERVAL);
+        }
+
+        function stopAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+            }
+        }
+
+        // Actions
+        async function saveProduct() {
+            const form = document.getElementById('addProductForm');
+            const formData = new FormData(form);
+            const productData = {};
+
+            formData.forEach((value, key) => {
+                if (key === 'price' || key === 'stock_quantity') {
+                    productData[key] = parseFloat(value) || 0;
+                } else if (key === 'is_active') {
+                    productData[key] = true;
+                } else {
+                    productData[key] = value;
+                }
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+                    loadProducts();
+                    showAlert('Produit créé avec succès!', 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(error.error || 'Erreur lors de la création du produit', 'danger');
+                }
+            } catch (error) {
+                showAlert('Erreur réseau', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Placeholder functions for actions
+        function viewOrder(orderNumber) {
+            showAlert(`Visualisation de la commande ${orderNumber}`, 'info');
+        }
+
+        function editOrder(orderNumber) {
+            showAlert(`Modification de la commande ${orderNumber}`, 'info');
+        }
+
+        function cancelOrder(orderNumber) {
+            if (confirm('Êtes-vous sûr de vouloir annuler cette commande?')) {
+                showAlert(`Commande ${orderNumber} annulée`, 'warning');
+            }
+        }
+
+        function editProduct(productId) {
+            showAlert(`Modification du produit ${productId}`, 'info');
+        }
+
+        function toggleProductStatus(productId) {
+            showAlert(`Changement de statut du produit ${productId}`, 'info');
+        }
+
+        function editUser(userId) {
+            showAlert(`Modification de l'utilisateur ${userId}`, 'info');
+        }
+
+        function resetUserPassword(userId) {
+            showAlert(`Réinitialisation du mot de passe utilisateur ${userId}`, 'info');
+        }
+
+        function createFullBackup() {
+            showAlert('Création d\'une sauvegarde complète...', 'info');
+        }
+
+        function testBackupIntegrity() {
+            showAlert('Test d\'intégrité des sauvegardes...', 'info');
+        }
+
+        function restoreBackup(backupPath) {
+            if (confirm('Êtes-vous sûr de vouloir restaurer cette sauvegarde?')) {
+                showAlert(`Restauration de ${backupPath}...`, 'warning');
+            }
+        }
+
+        function downloadBackup(backupPath) {
+            showAlert(`Téléchargement de ${backupPath}...`, 'info');
+        }
+
+        function deleteBackup(backupPath) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette sauvegarde?')) {
+                showAlert(`Suppression de ${backupPath}...`, 'danger');
+            }
+        }
+
+        function clearAllCaches() {
+            if (confirm('Êtes-vous sûr de vouloir vider tous les caches?')) {
+                showAlert('Vider tous les caches...', 'warning');
+            }
+        }
+
+        function restartServices() {
+            if (confirm('Êtes-vous sûr de vouloir redémarrer les services?')) {
+                showAlert('Redémarrage des services...', 'warning');
+            }
+        }
+
+        function generateSystemReport() {
+            showAlert('Génération du rapport système...', 'info');
+        }
+
+        function emergencyMaintenance() {
+            if (confirm('Êtes-vous sûr de vouloir activer la maintenance d\'urgence?')) {
+                showAlert('Maintenance d\'urgence activée', 'danger');
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+        });
     </script>
 </body>
 </html>
 """
 
-@app.route('/admin-dashboard')
+# Blueprint pour le dashboard admin
+admin_bp = Blueprint('admin', __name__)
+
+@admin_bp.route('/dashboard')
 def admin_dashboard():
-    """Dashboard d'administration ultra-professionnel"""
-    return render_template_string(PROFESSIONAL_DASHBOARD, version=DASHBOARD_VERSION, api_base=API_BASE)
+    """Servir le dashboard admin professionnel"""
+    return render_template_string(ADMIN_DASHBOARD_TEMPLATE)
 
-@app.route('/api/admin/dashboard')
-def api_dashboard():
-    """API pour les données du dashboard"""
-    return jsonify({
-        'stats': {
-            'total_users': 156,
-            'total_orders': 89,
-            'total_products': 12,
-            'monthly_revenue': 1250000,
-            'pending_orders': 5,
-            'out_of_stock': 2
-        },
-        'recent_orders': [
-            {
-                'order_number': 'PP202501011201',
-                'total_amount': 45000,
-                'status': 'pending',
-                'created_at': '2025-01-01T12:01:00Z',
-                'customer_id': 1
-            }
-        ],
-        'monthly_sales': [
-            {'month': '2024-12', 'revenue': 850000},
-            {'month': '2025-01', 'revenue': 1250000}
-        ]
-    })
+# Fonction pour enregistrer le blueprint
+def register_admin_dashboard(app):
+    """Enregistrer le dashboard admin dans l'application"""
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    return app
 
-@app.route('/api/admin/orders')
-def api_orders():
-    """API pour les commandes"""
-    return jsonify({
-        'orders': [
-            {
-                'order_number': 'PP202501011201',
-                'customer_id': 1,
-                'total_amount': 45000,
-                'status': 'pending',
-                'created_at': '2025-01-01T12:01:00Z',
-                'items': [{'name': 'Banderole Publicitaire', 'quantity': 2}]
-            }
-        ],
-        'pagination': {
-            'page': 1,
-            'per_page': 20,
-            'total': 1,
-            'pages': 1
-        }
-    })
-
-@app.route('/api/admin/products')
-def api_products():
-    """API pour les produits"""
-    return jsonify([
-        {
-            'id': 1,
-            'name': 'Banderole Publicitaire Premium',
-            'price': 25000,
-            'category': 'print',
-            'stock_quantity': 15,
-            'image_url': 'images/banderole.jpg'
-        },
-        {
-            'id': 2,
-            'name': 'Stickers Personnalisés Deluxe',
-            'price': 15000,
-            'category': 'print',
-            'stock_quantity': 0,
-            'image_url': 'images/macaron.jpg'
-        }
-    ])
-
-@app.route('/api/admin/users')
-def api_users():
-    """API pour les utilisateurs"""
-    return jsonify({
-        'users': [
-            {
-                'id': 1,
-                'first_name': 'Administrateur',
-                'last_name': 'PassPrint',
-                'email': 'admin@passprint.com',
-                'phone': '696465609',
-                'company': 'PassPrint SARL',
-                'created_at': '2025-01-01T00:00:00Z'
-            }
-        ],
-        'pagination': {
-            'page': 1,
-            'per_page': 20,
-            'total': 1,
-            'pages': 1
-        }
-    })
-
-@app.route('/api/admin/analytics')
-def api_analytics():
-    """API pour les analytics"""
-    return jsonify({
-        'monthly_sales': [
-            {'month': '2024-12', 'revenue': 850000},
-            {'month': '2025-01', 'revenue': 1250000}
-        ],
-        'top_products': [],
-        'status_counts': {'pending': 1, 'confirmed': 1}
-    })
-
-if __name__ == '__main__':
-    print("🚀 Démarrage du Dashboard d'Administration Ultra-Professionnel...")
-    print("📊 Dashboard: http://localhost:5000/admin-dashboard")
-    print("🔌 API: http://localhost:5000/api/admin/dashboard")
-    print("=" * 70)
-
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    print("🚀 Dashboard Admin Professionnel PassPrint")
+    print("Accès: http://localhost:5000/admin/dashboard")
