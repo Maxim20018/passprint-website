@@ -74,6 +74,7 @@
             bottom: 0;
             pointer-events: none;
             overflow: hidden;
+            opacity: 0.02;
         }
 
         .shape {
@@ -81,6 +82,8 @@
             background: rgba(255, 107, 53, 0.1);
             border-radius: 50%;
             animation: float 6s ease-in-out infinite;
+            width: 40px;
+            height: 40px;
         }
 
         .shape:nth-child(1) {
@@ -371,6 +374,39 @@
         .animate-pulse {
             animation: pulse 2s ease-in-out infinite;
         }
+
+        /* Corrections pour les textes qui débordent */
+        p, h1, h2, h3, h4, h5, h6 {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .slogan-text {
+            font-size: clamp(1rem, 3vw, 1.4rem);
+            max-width: 100%;
+        }
+
+        /* Optimisations responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 3rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            /* Ajouter padding sur mobile */
+            .hero, .py-5 {
+                padding: 1rem 0;
+            }
+
+            /* Boutons plus accessibles sur mobile */
+            .btn-hero-primary, .btn-hero-secondary {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
+            }
+        }
     </style>
     <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
@@ -472,21 +508,6 @@
                                 </a>
                             </div>
 
-                            <!-- Trust Indicators -->
-                            <div class="row text-center mt-5 animate__animated animate__fadeInUp animate__delay-4s">
-                                <div class="col-md-4">
-                                    <div class="stats-counter">500+</div>
-                                    <p class="mb-0" style="color: rgba(255,255,255,0.8);">Clients Satisfaits</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="stats-counter">10K+</div>
-                                    <p class="mb-0" style="color: rgba(255,255,255,0.8);">Projets Réalisés</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="stats-counter">10+</div>
-                                    <p class="mb-0" style="color: rgba(255,255,255,0.8);">Années d'Expertise</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
