@@ -451,8 +451,9 @@
                 padding: 15px 20px;
             }
 
-            .navbar-brand {
-                font-size: 24px !important;
+            /* Logo plus petit sur mobile */
+            .navbar-brand img {
+                height: 40px !important;
             }
 
             /* Menu hamburger bien visible */
@@ -460,10 +461,15 @@
                 color: #ffffff !important;
                 border: 2px solid #ffffff !important;
                 background: rgba(255, 255, 255, 0.1) !important;
+                padding: 8px 12px;
             }
 
             .navbar-toggler:focus {
                 box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+            }
+
+            .navbar-toggler-icon {
+                filter: brightness(0) invert(1) !important;
             }
         }
     </style>
@@ -501,16 +507,16 @@
       Aller au contenu principal
     </a>
     <header>
-        <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3); border-bottom: none;">
-            <div class="container">
-                <a class="navbar-brand" href="index.html" style="color: #ffffff !important; font-weight: 700; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);">
+        <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3); border-bottom: none; padding: 20px 40px;">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="index.html" style="display: flex; align-items: center; gap: 12px;">
                     <picture>
    <source srcset="images/webp/logo.webp" type="image/webp">
-   <img src="images/logo.svg" alt="PassPrint Logo" loading="lazy" style="filter: brightness(0) invert(1); filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));">
+   <img src="images/logo.svg" alt="PassPrint Logo" loading="lazy" style="height: 50px; width: auto; filter: none !important;">
 </picture>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="color: #ffffff; border: 2px solid #ffffff;">
-                    <span class="navbar-toggler-icon"></span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="color: #ffffff; border: 2px solid #ffffff; padding: 8px 12px;">
+                    <span class="navbar-toggler-icon" style="filter: brightness(0) invert(1);"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
