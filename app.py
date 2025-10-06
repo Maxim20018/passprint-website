@@ -6,7 +6,6 @@ from flask import Flask, request, jsonify, send_from_directory, session, g
 from flask_cors import CORS
 from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
 import uuid
@@ -16,6 +15,7 @@ import secrets
 import bcrypt
 from functools import wraps
 import jwt
+import logging
 from email_validator import validate_email, EmailNotValidError
 from threading import Thread
 import sqlite3
@@ -79,9 +79,16 @@ def create_app():
     config = get_config()
     app.config.from_object(config)
 
-    # Configuration de sécurité renforcée
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
+    # Configuration de sécurité renforcée - OBLIGATOIRE en production
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+    if not SECRET_KEY or not JWT_SECRET_KEY:
+        raise RuntimeError("SECRET_KEY et JWT_SECRET_KEY obligatoires en production!")
+    app.config['SECRET_KEY'] = SECRET_KEY
+    app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+
+    # URL de base configurable
+    BASE_URL = os.getenv('BASE_URL', 'http://localhost:5000')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///passprint.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -95,17 +102,16 @@ def create_app():
     app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 
     # Configuration CORS sécurisée
-    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5000')
-    if app.config.get('ENVIRONMENT') == 'production':
-        CORS(app, origins=cors_origins.split(','), supports_credentials=True)
-    else:
-        CORS(app)
+    cors_origins = os.getenv('CORS_ORIGINS', 'https://passprint-website.onrender.com')
+    CORS(app, origins=cors_origins.split(','), supports_credentials=True)
 
     # Initialisation des extensions
     db.init_app(app)
 
     # Configuration Stripe
-    stripe.api_key = os.getenv('STRIPE_SECRET_KEY', 'sk_test_dev_key')
+    stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+    if not stripe.api_key:
+        app.logger.warning("STRIPE_SECRET_KEY non configurée - paiements désactivés")
 
     # Configuration email
     app.config['MAIL_SERVER'] = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
@@ -263,7 +269,7 @@ def send_order_confirmation_email(order, customer_email):
                     </div>
 
                     <div style="text-align: center; margin: 2rem 0;">
-                        <a href="http://localhost:5000/pages/contact.html"
+                        <a href="{BASE_URL}/pages/contact.html"
                            style="background: #FF6B35; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px;">
                             Nous contacter
                         </a>
@@ -317,7 +323,7 @@ def send_quote_email(quote, customer_email):
                     </div>
 
                     <div style="text-align: center; margin: 2rem 0;">
-                        <a href="http://localhost:5000/pages/contact.html"
+                        <a href="{BASE_URL}/pages/contact.html"
                            style="background: #FF6B35; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px;">
                             Accepter le devis
                         </a>
@@ -363,7 +369,7 @@ def send_welcome_email(user_email, user_name):
                     </div>
 
                     <div style="text-align: center; margin: 2rem 0;">
-                        <a href="http://localhost:5000"
+                        <a href="{BASE_URL}"
                            style="background: #FF6B35; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px;">
                             Découvrir nos services
                         </a>
