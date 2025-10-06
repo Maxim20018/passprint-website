@@ -245,7 +245,7 @@ def send_email_async(app, msg):
 def send_order_confirmation_email(order, customer_email):
     """Envoyer email de confirmation de commande"""
     try:
-        app = create_app()
+        from flask import current_app
 
         msg = Message(
             subject=f"Confirmation de commande #{order.order_number} - PassPrint",
@@ -297,7 +297,7 @@ def send_order_confirmation_email(order, customer_email):
 def send_quote_email(quote, customer_email):
     """Envoyer email de devis"""
     try:
-        app = create_app()
+        from flask import current_app
 
         msg = Message(
             subject=f"Devis #{quote.quote_number} - PassPrint",
@@ -342,7 +342,7 @@ def send_quote_email(quote, customer_email):
 def send_welcome_email(user_email, user_name):
     """Envoyer email de bienvenue"""
     try:
-        app = create_app()
+        from flask import current_app
 
         msg = Message(
             subject="Bienvenue chez PassPrint!",
@@ -379,10 +379,6 @@ def send_welcome_email(user_email, user_name):
             """
         )
 
-        from flask_mail import Mail
-        mail = Mail(app)
-        from flask_mail import Mail
-        mail = Mail(app)
         thread = Thread(target=send_email_async, args=(app, msg))
         thread.start()
 
@@ -961,6 +957,11 @@ def get_quote(quote_number):
         return jsonify({'error': str(e)}), 500
 
 # Routes upload de fichiers
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'ai', 'psd'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     """Uploader un fichier"""
@@ -971,6 +972,9 @@ def upload_file():
         file = request.files['file']
         if file.filename == '':
             return jsonify({'error': 'Nom de fichier vide'}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Type de fichier non autorisé'}), 400
 
         if file:
             filename = secure_filename(file.filename)
@@ -1579,10 +1583,11 @@ def create_default_admin():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Créer les tables si elles n'existent pas
-        create_default_admin()  # Créer l'admin par défaut
+        if os.getenv('ENVIRONMENT') != 'production':
+            create_default_admin()  # Créer l'admin par défaut seulement en développement
 
     app.run(
         host=app.config['HOST'],
         port=app.config['PORT'],
-        debug=app.config['DEBUG']
+        debug=(os.getenv('ENVIRONMENT') != 'production')
     )
