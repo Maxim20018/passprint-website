@@ -407,6 +407,43 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* Améliorations professionnelles supplémentaires */
+        .navbar-nav .nav-link:hover {
+            color: #FF6B35 !important;
+            transform: translateY(-1px);
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.02);
+        }
+
+        /* Transitions fluides pour tous les éléments */
+        * {
+            transition: all 0.3s ease;
+        }
+
+        /* Améliorer les effets de survol des cartes */
+        .service-card-enhanced:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Améliorer les boutons */
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Améliorer les liens du footer */
+        footer a:hover {
+            color: #FF6B35 !important;
+            transform: translateX(5px);
+        }
     </style>
     <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
@@ -442,25 +479,25 @@
       Aller au contenu principal
     </a>
     <header>
-        <nav class="navbar navbar-expand-lg">
+        <nav class="navbar navbar-expand-lg navbar-light" style="background: rgba(255, 255, 255, 0.98) !important; backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); border-bottom: 1px solid rgba(255, 107, 53, 0.1);">
             <div class="container">
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="index.html" style="color: #1e3a5f !important; font-weight: 700;">
                     <picture>
-  <source srcset="images/webp/logo.webp" type="image/webp">
-  <img src="images/logo.svg" alt="PassPrint Logo" loading="lazy">
+   <source srcset="images/webp/logo.webp" type="image/webp">
+   <img src="images/logo.svg" alt="PassPrint Logo" loading="lazy" style="filter: drop-shadow(0 2px 4px rgba(30, 58, 95, 0.2));">
 </picture>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border: 1px solid rgba(30, 58, 95, 0.2);">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" href="index.html">Accueil</a></li>
-                        <li class="nav-item"><a class="nav-link" href="pages/about.html">À propos</a></li>
-                        <li class="nav-item"><a class="nav-link" href="pages/services.html">Services</a></li>
-                        <li class="nav-item"><a class="nav-link" href="pages/blog.html">Blog</a></li>
-                        <li class="nav-item"><a class="nav-link" href="pages/faq.html">FAQ</a></li>
-                        <li class="nav-item"><a class="nav-link" href="pages/contact.html">Contact</a></li>
+                        <li class="nav-item"><a class="nav-link" href="index.html" style="color: #1e3a5f !important; font-weight: 500; transition: all 0.3s ease;">Accueil</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pages/about.html" style="color: #1e3a5f !important; font-weight: 500; transition: all 0.3s ease;">À propos</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pages/services.html" style="color: #1e3a5f !important; font-weight: 500; transition: all 0.3s ease;">Services</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pages/blog.html" style="color: #1e3a5f !important; font-weight: 500; transition: all 0.3s ease;">Blog</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pages/faq.html" style="color: #1e3a5f !important; font-weight: 500; transition: all 0.3s ease;">FAQ</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pages/contact.html" style="color: #1e3a5f !important; font-weight: 500; transition: all 0.3s ease;">Contact</a></li>
                     </ul>
                 </div>
             </div>
@@ -479,8 +516,8 @@
                 <div class="row align-items-center min-vh-100">
                     <div class="col-lg-8 mx-auto text-center">
                         <div class="animate__animated animate__fadeInUp">
-                            <div class="hero-badge">
-                                <i class="fas fa-star"></i>
+                            <div class="hero-badge" style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+                                <i class="fas fa-star" style="color: #FFD700;"></i>
                                 Imprimerie Premium Douala
                             </div>
 
@@ -1266,7 +1303,7 @@
         });
     </script>
 
-    <!-- Bouton WhatsApp flottant -->
+    <!-- Bouton WhatsApp flottant amélioré -->
     <a href="https://wa.me/237696465609" class="whatsapp-float" target="_blank" aria-label="Contacter via WhatsApp">
       <i class="fab fa-whatsapp"></i>
     </a>
@@ -1274,34 +1311,76 @@
     <style>
     .whatsapp-float {
       position: fixed;
-      width: 60px;
-      height: 60px;
-      bottom: 80px;
-      right: 20px;
-      background: #25d366;
+      width: 70px;
+      height: 70px;
+      bottom: 25px;
+      right: 25px;
+      background: #25D366;
       color: #FFF;
-      border-radius: 50px;
-      text-align: center;
-      font-size: 30px;
-      box-shadow: 2px 2px 3px #999;
-      z-index: 1000;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      z-index: 9999;
       transition: all 0.3s ease;
+
+      /* OMBRE PRONONCÉE pour ressortir sur fond violet/rose */
+      box-shadow:
+        0 8px 25px rgba(37, 211, 102, 0.5),
+        0 0 0 0 rgba(37, 211, 102, 0.7);
     }
+
+    /* Animation PULSE pour attirer l'attention */
+    @keyframes whatsapp-pulse {
+      0% {
+        box-shadow:
+          0 8px 25px rgba(37, 211, 102, 0.5),
+          0 0 0 0 rgba(37, 211, 102, 0.7);
+      }
+      50% {
+        box-shadow:
+          0 8px 25px rgba(37, 211, 102, 0.5),
+          0 0 0 15px rgba(37, 211, 102, 0);
+      }
+      100% {
+        box-shadow:
+          0 8px 25px rgba(37, 211, 102, 0.5),
+          0 0 0 0 rgba(37, 211, 102, 0);
+      }
+    }
+
+    .whatsapp-float {
+      animation: whatsapp-pulse 2.5s infinite;
+    }
+
+    /* Effet HOVER élégant */
     .whatsapp-float:hover {
-      background: #128C7E;
-      color: #FFF;
-      transform: scale(1.1);
+      transform: scale(1.15);
+      box-shadow: 0 12px 35px rgba(37, 211, 102, 0.7);
+      animation: none; /* Stoppe le pulse au hover */
     }
+
+    /* Icône WhatsApp bien centrée */
+    .whatsapp-float svg,
+    .whatsapp-float i {
+      font-size: 35px;
+      color: white;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    /* Améliorations sur MOBILE */
     @media (max-width: 768px) {
       .whatsapp-float {
-        width: 55px;
-        height: 55px;
-        bottom: 70px;
-        right: 15px;
-        font-size: 26px;
+        width: 60px;
+        height: 60px;
+        bottom: 20px;
+        right: 20px;
+      }
+
+      .whatsapp-float svg,
+      .whatsapp-float i {
+        font-size: 30px;
       }
     }
     </style>
